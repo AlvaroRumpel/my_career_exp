@@ -51,6 +51,7 @@ export interface Career {
   targetOverrides: Partial<Record<Category, string>>
   playStyle?: string
   nextGoals?: Goal[] | null
+  pendingContext?: { home: boolean; playoffs: boolean } | null
   lastResult?: { gameId: string; instructions: Instruction[]; goalsMet: string[]; goals: Goal[] } | null
 }
 export const DEFAULT_CONFIG: EngineConfig = {
