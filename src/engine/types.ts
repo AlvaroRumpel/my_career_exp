@@ -14,7 +14,7 @@ export type GoalKind = 'pts' | 'reb' | 'ast' | 'stocks' | 'fgPct' | 'tpPct' | 'a
 export interface Goal { id: string; category: Category; kind: GoalKind; target: number; description: string }
 export interface Game {
   id: string; context: GameContext; box: BoxScore | null
-  goals: Goal[]; goalsMet: string[]
+  goals: Goal[]; goalsMet: string[]; ovrAfter?: number
 }
 export interface Season { year: number; games: Game[] }
 export interface AttributeState { value: number; xp: number }

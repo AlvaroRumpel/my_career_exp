@@ -1,5 +1,5 @@
 import type { Career, Game, Instruction } from './types'
-import { ATTRIBUTES, PHYSICAL_REGRESSION_ORDER } from './attributes'
+import { ATTRIBUTES, PHYSICAL_REGRESSION_ORDER, estimateOverall } from './attributes'
 import { BADGES, applyBadgeProgress, progressForTier } from './badges'
 import { applyGameXp } from './progression'
 import { updateChallenge, createChallenge } from './challenges'
@@ -26,6 +26,8 @@ export function processGame(career: Career, seasonIndex: number, game: Game): In
   }
   const instructions = [...xpResult.instructions, ...badgeInstr]
   career.pendingInstructions.push(...instructions)
+  const values = Object.fromEntries(ATTRIBUTES.map(a => [a.id, career.attributes[a.id].value]))
+  game.ovrAfter = estimateOverall(values, career.player.position)
   return instructions
 }
 
