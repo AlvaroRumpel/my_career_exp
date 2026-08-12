@@ -7,19 +7,19 @@ import { recentAverages } from '../engine/goals'
 import { createChallenge } from '../engine/challenges'
 import { exportCareer, importCareer } from '../storage'
 import { recalcCareer, regressionInstructions, playedGameCount } from '../engine/recalc'
-import { PLAY_STYLES, getStyle } from '../engine/playStyles'
-import type { Category } from '../engine/types'
+import { PLAY_STYLES, getStyle, styleCategoryMult } from '../engine/playStyles'
+import { CATEGORIES, CATEGORY_LABELS, CATEGORY_ABBR, categoryAverages, seasonOvrDelta } from './derive'
 
-const CATEGORY_LABELS: Record<Category, string> = {
-  inside: 'Interior', mid: 'Mid-Range', three: 'Três', ft: 'Lance Livre',
-  playmaking: 'Playmaking', rebounding: 'Rebote', defense: 'Defesa', physical: 'Físico',
+const TIER_STYLE: Record<number, { border: string; label: string; seg: string; grad: boolean }> = {
+  0: { border: 'border-hud-line', label: 'text-stone-600', seg: '', grad: false },
+  1: { border: 'border-bronze/40', label: 'text-bronze-light', seg: 'bg-bronze', grad: true },
+  2: { border: 'border-slate-300/40', label: 'text-slate-200', seg: 'bg-slate-300', grad: true },
+  3: { border: 'border-yellow-400/40', label: 'text-yellow-300', seg: 'bg-yellow-400', grad: true },
+  4: { border: 'border-red-400/40', label: 'text-red-300', seg: 'bg-red-400', grad: true },
+  5: { border: 'border-purple-400/40', label: 'text-purple-300', seg: 'bg-purple-400', grad: true },
 }
-const CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[]
 
-const TIER_TEXT: Record<number, string> = {
-  0: 'text-zinc-600', 1: 'text-amber-700', 2: 'text-zinc-400',
-  3: 'text-yellow-500', 4: 'text-red-500', 5: 'text-purple-500',
-}
+const pad2 = (n: number) => String(n).padStart(2, '0')
 
 function AttrRow({ label, value, xp, cost }: { label: string; value: number; xp: number; cost: number }) {
   const pct = Math.min(100, Math.round((xp / cost) * 100))
@@ -27,8 +27,8 @@ function AttrRow({ label, value, xp, cost }: { label: string; value: number; xp:
     <div className="flex items-center gap-2 text-sm">
       <span className="w-40 truncate">{label}</span>
       <span className="stat w-8 text-right">{value}</span>
-      <div className="h-2 flex-1 rounded-full bg-zinc-800">
-        <div className="h-2 rounded-full bg-gradient-to-r from-orange-600 to-orange-400" style={{ width: `${pct}%` }} />
+      <div className="h-1.5 flex-1 bg-[#171412]">
+        <div className="h-1.5 bg-gradient-to-r from-orange-700 to-orange-400" style={{ width: `${pct}%` }} />
       </div>
     </div>
   )
@@ -38,6 +38,8 @@ export default function Dashboard() {
   const { career, update, create, reset } = useCareer()
   const [challengeBadge, setChallengeBadge] = useState(BADGES[0].id)
   const [nextStyle, setNextStyle] = useState<string | null>(null)
+  const [showAttrs, setShowAttrs] = useState(false)
+  const [showAllBadges, setShowAllBadges] = useState(false)
 
   if (!career) return null
 
@@ -46,7 +48,14 @@ export default function Dashboard() {
   const season = seasons[seasons.length - 1]
   const attrValues = Object.fromEntries(ATTRIBUTES.map(a => [a.id, career.attributes[a.id]?.value ?? 0]))
   const ovr = estimateOverall(attrValues, player.position)
+  const delta = seasonOvrDelta(career)
   const avg = recentAverages(season.games, 999)
+  const catAvg = categoryAverages(career)
+  const style = getStyle(career.playStyle)
+  const activeBadgeCount = BADGES.filter(b => tierOf(career.badges[b.id]?.progress ?? 0) > 0).length
+  const sortedBadges = [...BADGES].sort((a, b) =>
+    tierOf(career.badges[b.id]?.progress ?? 0) - tierOf(career.badges[a.id]?.progress ?? 0))
+  const visibleBadges = showAllBadges ? BADGES : sortedBadges.slice(0, 4)
 
   function addChallenge() {
     update(c => { c.activeChallenges.push(createChallenge(challengeBadge, playedGameCount(c))) })
@@ -103,126 +112,227 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="card flex flex-wrap items-baseline justify-between gap-2 p-4">
-        <div>
-          <h1 className="font-['Barlow_Condensed'] text-2xl font-extrabold uppercase tracking-wide">{player.name}</h1>
-          <p className="text-sm text-zinc-400">{player.position} · {player.team} · {age} anos · Estilo: {getStyle(career.playStyle).name}</p>
-        </div>
-        <div className="text-right">
-          <p className="stat text-5xl text-orange-500">{ovr} <span className="text-2xl">OVR</span></p>
-          <p className="text-sm text-zinc-400">Temporada {season.year}</p>
+    <div className="flex flex-col gap-3.5">
+
+      {/* Hero */}
+      <div className="hud-panel-hot">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="font-display text-[10px] tracking-[.2em] text-orange-400 uppercase">
+              {player.position} · {player.team} · {player.heightCm} CM
+            </div>
+            <div className="font-display text-[29px] leading-none font-bold uppercase">{player.name}</div>
+            <div className="mt-1 flex gap-1.5">
+              <span className="hud-chip hud-chip-active px-2 py-1 text-[11px]">{style.name}</span>
+              <span className="hud-chip px-2 py-1 text-[11px]">{age} anos</span>
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            <div className="hud-label tracking-[.18em]">Overall</div>
+            <div className="stat text-[58px] leading-[.95] text-orange-400 drop-shadow-[0_0_24px_rgba(249,115,22,.55)]">{ovr}</div>
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className={`font-display text-[13px] font-bold ${delta > 0 ? 'text-green-400' : 'text-hud-mut'}`}>
+                {delta > 0 ? `▲ ${delta}` : delta < 0 ? `▼ ${-delta}` : '—'}
+              </span>
+              <span className="font-display text-[9px] tracking-[.12em] text-hud-mut">NA TEMP. {season.year}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <section className="space-y-2">
-        <h2 className="font-semibold">Instruções pendentes</h2>
-        {career.pendingInstructions.length === 0 ? (
-          <p className="text-sm text-zinc-500">Nenhuma pendência.</p>
-        ) : (
-          <ul className="list-inside list-disc space-y-1 text-sm">
-            {career.pendingInstructions.map(i => <li key={i.id}>{i.text}</li>)}
-          </ul>
-        )}
-        <button className="btn" disabled={career.pendingInstructions.length === 0}
-          onClick={() => update(c => {
+      {/* Upgrades liberados */}
+      {career.pendingInstructions.length > 0 ? (
+        <div className="flex flex-col gap-3 border border-amber-400/40 p-4 clip-corner-lg"
+          style={{ background: 'linear-gradient(150deg, rgba(120,53,15,.42), #0c0b0a 65%)' }}>
+          <div className="flex items-center gap-2">
+            <span className="h-[7px] w-[7px] rotate-45 bg-amber-400 animate-[hudPulse_2.4s_ease-in-out_infinite]" />
+            <span className="hud-title text-[15px]">Upgrades liberados</span>
+            <span className="ml-auto font-display text-[11px] tracking-[.1em] text-amber-200">
+              {pad2(career.pendingInstructions.length)}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {career.pendingInstructions.map(i => (
+              <div key={i.id}
+                className={`bg-hud-bg/60 border-l-2 px-3 py-2.5 text-sm font-medium ${i.type === 'badge' ? 'border-slate-300' : 'border-amber-400'}`}>
+                {i.text}
+              </div>
+            ))}
+          </div>
+          <button className="btn-cta" onClick={() => update(c => {
             c.appliedInstructionIds = [...(c.appliedInstructionIds ?? []), ...c.pendingInstructions.map(i => i.id)]
             c.pendingInstructions = []
           })}>
-          Apliquei tudo no 2K
-        </button>
-      </section>
+            Apliquei tudo no 2K
+          </button>
+        </div>
+      ) : (
+        <div className="hud-panel py-3 text-sm text-hud-mut2">Nenhuma pendência para aplicar no 2K.</div>
+      )}
 
-      <section className="space-y-4">
-        <h2 className="font-semibold">Atributos</h2>
-        {CATEGORIES.map(cat => (
-          <div key={cat} className="space-y-1">
-            <h3 className="text-sm font-semibold text-zinc-400">{CATEGORY_LABELS[cat]}</h3>
-            {attributesByCategory(cat).map(a => {
-              const state = career.attributes[a.id]
-              return (
-                <AttrRow key={a.id} label={a.label} value={state.value} xp={state.xp}
-                  cost={upgradeCost(state.value, career.config)} />
-              )
-            })}
-          </div>
-        ))}
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="font-semibold">Badges</h2>
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-          {BADGES.map(b => {
-            const progress = career.badges[b.id]?.progress ?? 0
-            const tier = tierOf(progress)
-            const base = progressForTier(tier)
-            const maxed = tier >= TIER_THRESHOLDS.length
-            const next = TIER_THRESHOLDS[tier]
-            const pct = maxed ? 100 : Math.round(((progress - base) / (next - base)) * 100)
+      {/* Atributos */}
+      <div className="hud-panel flex flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <span className="hud-title">Atributos</span>
+          <span className="hud-label tracking-[.12em]">{ATTRIBUTES.length} em {CATEGORIES.length} categorias</span>
+        </div>
+        <div className="flex items-end gap-1.5">
+          {CATEGORIES.map(cat => {
+            const focused = styleCategoryMult(career.playStyle, cat) > 1
             return (
-              <div key={b.id} className="card p-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="truncate">{b.name}</span>
-                  <span className={`stat ${TIER_TEXT[tier]}`}>{TIER_NAMES[tier]}</span>
+              <div key={cat} className="flex flex-1 flex-col items-center gap-1.5">
+                <span className={`font-display text-[13px] font-bold ${focused ? 'text-orange-400' : 'text-stone-400'}`}>{catAvg[cat]}</span>
+                <div className="flex h-[76px] w-full flex-col justify-end bg-[#171412]">
+                  <div className={focused
+                    ? 'bg-gradient-to-b from-orange-300 to-orange-700'
+                    : 'bg-gradient-to-b from-stone-600 to-stone-800'}
+                    style={{ height: `${catAvg[cat]}%` }} />
                 </div>
-                <div className="mt-1 h-1.5 rounded-full bg-zinc-800">
-                  <div className="h-1.5 rounded-full bg-gradient-to-r from-orange-600 to-orange-400" style={{ width: `${pct}%` }} />
-                </div>
+                <span className="font-display text-[9px] tracking-[.06em] text-hud-mut">{CATEGORY_ABBR[cat]}</span>
               </div>
             )
           })}
         </div>
-      </section>
+        <div className="flex items-center justify-between border-t border-hud-line pt-2.5">
+          <span className="font-display text-[10px] tracking-[.1em] text-orange-700 uppercase">
+            Laranja = foco do estilo {style.name}
+          </span>
+          <button className="text-sm font-medium text-stone-400" onClick={() => setShowAttrs(v => !v)}>
+            {showAttrs ? 'Fechar lista' : 'Abrir lista'}
+          </button>
+        </div>
+        {showAttrs && (
+          <div className="flex flex-col gap-3 border-t border-hud-line pt-3">
+            {CATEGORIES.map(cat => (
+              <div key={cat} className="flex flex-col gap-1">
+                <span className="hud-label">{CATEGORY_LABELS[cat]}</span>
+                {attributesByCategory(cat).map(a => {
+                  const state = career.attributes[a.id]
+                  return (
+                    <AttrRow key={a.id} label={a.label} value={state.value} xp={state.xp}
+                      cost={upgradeCost(state.value, career.config)} />
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-      <section className="space-y-2">
-        <h2 className="font-semibold">Desafios ativos</h2>
+      {/* Badges */}
+      <div className="flex items-baseline justify-between px-0.5">
+        <span className="hud-title">Badges</span>
+        <span className="hud-label tracking-[.12em]">{pad2(activeBadgeCount)} / {BADGES.length} ativas</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {visibleBadges.map(b => {
+          const progress = career.badges[b.id]?.progress ?? 0
+          const tier = tierOf(progress)
+          const base = progressForTier(tier)
+          const maxed = tier >= TIER_THRESHOLDS.length
+          const next = TIER_THRESHOLDS[tier]
+          const pct = maxed ? 100 : Math.round(((progress - base) / (next - base)) * 100)
+          const ts = TIER_STYLE[tier]
+          const onSegs = maxed ? 5 : Math.min(4, Math.floor(pct / 20))
+          return (
+            <div key={b.id} className={`flex flex-col gap-2 border p-3 clip-corner ${ts.border}`}
+              style={ts.grad ? { background: 'linear-gradient(150deg, rgba(120,113,108,.08), #0d0c0b 70%)' } : { background: '#0d0c0b' }}>
+              <div className="flex items-center justify-between gap-1">
+                <span className={`truncate text-[13px] font-semibold ${tier === 0 ? 'text-stone-400' : ''}`}>{b.name}</span>
+                <span className={`font-display text-[10px] tracking-[.12em] uppercase ${ts.label}`}>
+                  {tier === 0 ? 'Sem tier' : TIER_NAMES[tier]}
+                </span>
+              </div>
+              <div className="flex gap-1">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <div key={i} className={`h-[5px] flex-1 ${i < onSegs && ts.seg ? ts.seg : 'bg-stone-900'}`} />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <button className="btn-ghost text-stone-400" onClick={() => setShowAllBadges(v => !v)}>
+        {showAllBadges ? 'Mostrar menos' : 'Ver todas as badges'}
+      </button>
+
+      {/* Desafios */}
+      <div className="hud-panel flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <span className="hud-title">Desafio ativo</span>
+          {career.activeChallenges.length > 0 && (
+            <span className="stat text-sm text-orange-400">
+              {pad2(career.activeChallenges[0].currentStreak)} / {pad2(career.activeChallenges[0].streakLen)}
+            </span>
+          )}
+        </div>
+        {career.activeChallenges.length === 0 && (
+          <p className="text-sm text-hud-mut2">Nenhum desafio ativo.</p>
+        )}
         {career.activeChallenges.map((ch, idx) => (
-          <div key={`${ch.badgeId}-${idx}`} className="card flex items-center justify-between gap-2 p-2 text-sm">
-            <span>{ch.description} — sequência <span className="stat">{ch.currentStreak}/{ch.streakLen}</span></span>
-            <button className="btn" onClick={() => removeChallenge(idx)}>Remover</button>
+          <div key={`${ch.badgeId}-${idx}`} className="flex flex-col gap-2">
+            <p className="text-sm leading-snug">{ch.description}</p>
+            <div className="flex gap-1.5">
+              {Array.from({ length: ch.streakLen }, (_, i) => (
+                <div key={i} className={`h-1.5 flex-1 ${i < ch.currentStreak ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,.5)]' : 'bg-stone-900'}`} />
+              ))}
+            </div>
+            <button className="btn-ghost self-start px-4 py-1.5 text-stone-400" onClick={() => removeChallenge(idx)}>Remover</button>
           </div>
         ))}
         {career.activeChallenges.length < 2 && (
-          <div className="flex items-center gap-2">
-            <select className="input" value={challengeBadge} onChange={e => setChallengeBadge(e.target.value)}>
+          <div className="flex gap-2 border-t border-hud-line pt-3">
+            <select className="input flex-1 text-sm" value={challengeBadge} onChange={e => setChallengeBadge(e.target.value)}>
               {BADGES.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
-            <button className="btn" onClick={addChallenge}>Criar desafio</button>
+            <button className="border border-orange-500/40 px-3 py-2 text-sm font-semibold text-orange-300" onClick={addChallenge}>
+              Novo desafio
+            </button>
           </div>
         )}
-      </section>
+      </div>
 
-      <section className="space-y-2">
-        <h2 className="font-semibold">Médias da temporada</h2>
-        {avg ? (
-          <div className="grid grid-cols-5 gap-2 text-center text-sm">
-            <div><p className="text-zinc-400">PPG</p><p className="stat text-lg">{avg.pts.toFixed(1)}</p></div>
-            <div><p className="text-zinc-400">RPG</p><p className="stat text-lg">{avg.reb.toFixed(1)}</p></div>
-            <div><p className="text-zinc-400">APG</p><p className="stat text-lg">{avg.ast.toFixed(1)}</p></div>
-            <div><p className="text-zinc-400">FG%</p><p className="stat text-lg">{avg.fga > 0 ? (avg.fgm / avg.fga * 100).toFixed(1) : '0.0'}</p></div>
-            <div><p className="text-zinc-400">3P%</p><p className="stat text-lg">{avg.tpa > 0 ? (avg.tpm / avg.tpa * 100).toFixed(1) : '0.0'}</p></div>
-          </div>
-        ) : (
-          <p className="text-sm text-zinc-500">Nenhum jogo registrado nesta temporada.</p>
-        )}
-      </section>
+      {/* Médias */}
+      {avg ? (
+        <div className="grid grid-cols-5 gap-px border border-hud-line bg-hud-line">
+          {[
+            ['PPG', avg.pts.toFixed(1), false],
+            ['RPG', avg.reb.toFixed(1), false],
+            ['APG', avg.ast.toFixed(1), false],
+            ['FG', avg.fga > 0 ? `${(avg.fgm / avg.fga * 100).toFixed(0)}%` : '0%', false],
+            ['3P', avg.tpa > 0 ? `${(avg.tpm / avg.tpa * 100).toFixed(0)}%` : '0%', true],
+          ].map(([label, value, hot]) => (
+            <div key={label as string} className="flex flex-col items-center gap-1 bg-hud-panel px-1 py-3">
+              <span className={`stat text-xl leading-none ${hot ? 'text-orange-400' : ''}`}>{value}</span>
+              <span className="font-display text-[9px] tracking-[.1em] text-hud-mut">{label}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="hud-panel py-3 text-sm text-hud-mut2">Nenhum jogo registrado nesta temporada.</div>
+      )}
 
-      <section className="space-y-2 border-t border-zinc-800 pt-4">
-        <h2 className="font-semibold">Gestão</h2>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn" onClick={handleExport}>Exportar JSON</button>
-          <label className="btn cursor-pointer">
+      {/* Gestão */}
+      <div className="flex flex-col gap-2.5 border-t border-hud-line pt-4">
+        <span className="hud-label">Gestão da carreira</span>
+        <select className="input text-sm" value={nextStyle ?? (career.playStyle ?? 'balanced')}
+          onChange={e => setNextStyle(e.target.value)} title="Estilo da próxima temporada">
+          {PLAY_STYLES.map(s => <option key={s.id} value={s.id}>{s.reference ? `${s.name} — ${s.reference}` : s.name}</option>)}
+        </select>
+        <div className="grid grid-cols-2 gap-2">
+          <button className="btn-ghost" onClick={handleExport}>Exportar JSON</button>
+          <label className="btn-ghost cursor-pointer">
             Importar JSON
             <input type="file" accept="application/json" className="hidden" onChange={handleImport} />
           </label>
-          <select className="input" value={nextStyle ?? (career.playStyle ?? 'balanced')}
-            onChange={e => setNextStyle(e.target.value)} title="Estilo da próxima temporada">
-            {PLAY_STYLES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <button className="btn" onClick={newSeason}>Nova temporada</button>
-          <button className="btn bg-red-700 hover:bg-red-600" onClick={deleteCareer}>Apagar carreira</button>
+          <button className="border border-orange-500/40 px-3 py-2 text-sm font-semibold text-orange-300" onClick={newSeason}>
+            Nova temporada
+          </button>
+          <button className="border border-red-400/35 px-3 py-2 text-sm font-medium text-red-400" onClick={deleteCareer}>
+            Apagar carreira
+          </button>
         </div>
-      </section>
+      </div>
     </div>
   )
 }
