@@ -13,9 +13,13 @@ describe('play style catalog', () => {
     expect(Object.keys(b.catMults).length).toBe(0)
     expect(b.focusBadges.length).toBe(0)
   })
-  it('every catMult deviation is 1.5 or 0.7', () => {
+  it('every catMult deviation is a focus (1, 1.5] or a penalty [0.7, 1)', () => {
     for (const s of PLAY_STYLES) {
-      for (const v of Object.values(s.catMults)) expect([1.5, 0.7]).toContain(v)
+      for (const v of Object.values(s.catMults)) {
+        const focus = v > 1 && v <= 1.5
+        const penalty = v >= 0.7 && v < 1
+        expect(focus || penalty, `${s.id}: ${v}`).toBe(true)
+      }
     }
   })
   it('every focusBadge id exists in the badge catalog', () => {

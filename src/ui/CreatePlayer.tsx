@@ -205,9 +205,11 @@ export default function CreatePlayer() {
                   {s.reference ? `ref. ${s.reference}` : 'sem foco'}
                 </span>
                 <span className="mt-0.5 flex flex-wrap gap-1">
-                  {Object.entries(s.catMults).filter(([, m]) => m > 1).map(([cat, m]) => (
+                  {Object.entries(s.catMults).sort(([, a], [, b]) => b - a).map(([cat, m]) => (
                     <span key={cat} className={`border px-1.5 py-0.5 font-display text-[9px] tracking-[.08em] ${
-                      active ? 'border-orange-500/40 text-orange-300' : 'border-hud-line2 text-hud-mut2'}`}>
+                      m > 1
+                        ? active ? 'border-orange-500/40 text-orange-300' : 'border-hud-line2 text-stone-300'
+                        : 'border-hud-line text-stone-600'}`}>
                       {CATEGORY_ABBR[cat as Category]} ×{m}
                     </span>
                   ))}
