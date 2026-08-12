@@ -1,29 +1,65 @@
 @import "tailwindcss";
 
+@theme {
+  --color-hud-bg: #0a0908;
+  --color-hud-panel: #0d0c0b;
+  --color-hud-panel2: #100f0e;
+  --color-hud-line: #221e1b;
+  --color-hud-line2: #2a2521;
+  --color-hud-ink: #f5f1ee;
+  --color-hud-mut: #77706a;
+  --color-hud-mut2: #8a8078;
+  --color-bronze: #c2792a;
+  --color-bronze-light: #e0a35c;
+  --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+}
+
 body {
-  font-family: 'Barlow', ui-sans-serif, system-ui, sans-serif;
-  background: linear-gradient(to bottom, #09090b, #000000);
+  font-family: var(--font-sans);
+  background-color: var(--color-hud-bg);
+  color: var(--color-hud-ink);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes hudPulse {
+  0%, 100% { opacity: .4; }
+  50% { opacity: .85; }
+}
+
+@utility clip-corner {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+@utility clip-corner-lg {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
 }
 
 @layer components {
-  .input {
-    @apply rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100;
+  .hud-panel { @apply border border-hud-line bg-hud-panel/85 p-4; }
+  .hud-panel-hot {
+    @apply border border-orange-500/30 p-4 clip-corner-lg;
+    background: linear-gradient(150deg, #1f1611, #0d0c0b 70%);
   }
-  .btn {
-    @apply rounded bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-700 disabled:opacity-40 disabled:hover:bg-zinc-800;
-  }
-  .card {
-    @apply rounded-lg border border-zinc-800 bg-zinc-900 transition-colors hover:border-zinc-700;
-  }
+  .hud-label { @apply font-display text-[10px] tracking-[.16em] text-hud-mut uppercase; }
+  .hud-title { @apply font-display text-sm font-bold tracking-[.14em] uppercase; }
+  .hud-chip { @apply border border-hud-line px-3 py-2 text-center font-display text-xs font-semibold tracking-[.08em] text-hud-mut2 uppercase; }
+  .hud-chip-active { @apply border-orange-500/55 bg-orange-500/15 text-orange-300; }
+  .btn-cta { @apply bg-orange-500 py-3 text-center font-display text-sm font-bold tracking-[.1em] text-[#160b03] uppercase clip-corner disabled:opacity-40; }
+  .btn-ghost { @apply border border-hud-line2 px-3 py-2 text-center text-sm font-medium text-stone-300; }
+  .input { @apply border border-hud-line2 bg-hud-panel2 px-2 py-1.5 text-hud-ink; }
   .stat {
-    font-family: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
   }
-  .page-title {
-    font-family: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
-    @apply border-l-4 border-orange-500 pl-3 text-2xl font-extrabold uppercase tracking-wide text-zinc-100;
+  .page-grid {
+    background-image: linear-gradient(rgba(249, 115, 22, .05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(249, 115, 22, .05) 1px, transparent 1px);
+    background-size: 34px 34px;
   }
+  /* transition aliases — removed in Task 7 cleanup */
+  .btn { @apply border border-hud-line2 px-3 py-2 text-center text-sm font-medium text-stone-300 disabled:opacity-40; }
+  .card { @apply border border-hud-line bg-hud-panel/85; }
+  .page-title { @apply font-display border-l-4 border-orange-500 pl-3 text-2xl font-bold uppercase tracking-wide; }
 }
