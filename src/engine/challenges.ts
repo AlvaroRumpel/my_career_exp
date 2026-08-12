@@ -1,5 +1,5 @@
 import type { BadgeState, BoxScore, Challenge } from './types'
-import { BADGES, TIER_THRESHOLDS, tierOf, progressForTier } from './badges'
+import { BADGES, TIER_THRESHOLDS, tierOf } from './badges'
 
 // stat e alvo por badge; badges sem stat claro usam min (presença)
 const CHALLENGE_SPECS: Record<string, { stat: Challenge['stat']; perGame: number; streakLen: number }> = {
