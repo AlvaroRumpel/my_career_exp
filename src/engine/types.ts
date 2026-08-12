@@ -16,7 +16,7 @@ export interface Game {
   id: string; context: GameContext; box: BoxScore | null
   goals: Goal[]; goalsMet: string[]; ovrAfter?: number
 }
-export interface Season { year: number; games: Game[] }
+export interface Season { year: number; games: Game[]; playStyle?: string }
 export interface AttributeState { value: number; xp: number }
 export interface BadgeState { progress: number }
 export interface Challenge {
@@ -49,6 +49,7 @@ export interface Career {
   appliedInstructionIds?: string[]
   config: EngineConfig
   targetOverrides: Partial<Record<Category, string>>
+  playStyle?: string
   nextGoals?: Goal[] | null
   lastResult?: { gameId: string; instructions: Instruction[]; goalsMet: string[]; goals: Goal[] } | null
 }

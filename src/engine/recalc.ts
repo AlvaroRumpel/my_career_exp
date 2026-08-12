@@ -19,13 +19,14 @@ export function playedGameCount(career: Career): number {
 export function processGame(career: Career, seasonIndex: number, game: Game, globalGameIndex: number): Instruction[] {
   if (!game.box || game.box.min <= 0) return []
   const age = ageAt(career, seasonIndex)
+  const styleId = career.seasons[seasonIndex].playStyle ?? 'balanced'
   // metas
   game.goalsMet = game.goals.filter(g => goalMet(g, game.box!, game.context)).map(g => g.id)
   const bonus = goalBonus(game.goals, game.goalsMet)
   // XP de atributos
-  const xpResult = applyGameXp(career, game.box, game.context, age, bonus, game.id)
+  const xpResult = applyGameXp(career, game.box, game.context, age, bonus, game.id, styleId)
   // badges passivas
-  const badgeInstr = applyBadgeProgress(career.badges, game.box, game.context, career.player.position, game.id)
+  const badgeInstr = applyBadgeProgress(career.badges, game.box, game.context, career.player.position, game.id, styleId)
   // desafios ativos (completados são renovados pra mesma badge); desafios criados após este
   // jogo (startGameIndex > globalGameIndex) ainda não valem para o histórico sendo processado
   for (const ch of career.activeChallenges) {

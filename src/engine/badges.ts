@@ -1,4 +1,5 @@
 import type { BoxScore, GameContext, Position, BadgeState, Instruction } from './types'
+import { styleBadgeMult } from './playStyles'
 
 export const TIER_NAMES = ['—', 'Bronze', 'Prata', 'Ouro', 'HOF', 'Lenda']
 export const TIER_THRESHOLDS = [10, 30, 80, 200, 400]
@@ -81,6 +82,7 @@ export function progressForTier(tier: number): number {
 
 export function applyBadgeProgress(
   badges: Record<string, BadgeState>, box: BoxScore, ctx: GameContext, position: Position, gameId: string,
+  styleId: string = 'balanced',
 ): Instruction[] {
   const instructions: Instruction[] = []
   let n = 0 // local counter, resets per call -> deterministic ids across replays
@@ -88,7 +90,7 @@ export function applyBadgeProgress(
     const state = badges[def.id]
     if (!state) continue
     const before = tierOf(state.progress)
-    state.progress += def.units(box, ctx, position)
+    state.progress += def.units(box, ctx, position) * styleBadgeMult(styleId, def.id)
     const after = tierOf(state.progress)
     if (after > before) {
       instructions.push({

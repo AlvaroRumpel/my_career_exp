@@ -2,6 +2,7 @@ import type { BoxScore, Career, Category, EngineConfig, GameContext, Instruction
 import { attributesByCategory, ATTRIBUTES } from './attributes'
 import { categoryXp } from './categoryXp'
 import { qualityMultiplier, ageMultiplier, contextMultiplier } from './multipliers'
+import { styleCategoryMult } from './playStyles'
 
 export function upgradeCost(value: number, cfg: EngineConfig): number {
   return Math.round(cfg.baseCost * Math.pow(cfg.costGrowth, value - 70))
@@ -25,6 +26,7 @@ export interface GameXpResult {
 export function applyGameXp(
   career: Career, box: BoxScore, ctx: GameContext, age: number,
   goalBonus: Partial<Record<Category, number>>, gameId: string,
+  styleId: string = 'balanced',
 ): GameXpResult {
   const cfg = career.config
   const mult = qualityMultiplier(box) * ageMultiplier(age, cfg) * contextMultiplier(ctx, cfg)
@@ -34,7 +36,7 @@ export function applyGameXp(
   let n = 0 // local counter, resets per call -> deterministic ids across replays
 
   for (const cat of Object.keys(raw) as Category[]) {
-    const gameXp = raw[cat] * mult
+    const gameXp = raw[cat] * mult * styleCategoryMult(styleId, cat)
     const bonus = Math.min(goalBonus[cat] ?? 0, gameXp * cfg.goalBonusCap)
     const total = gameXp + bonus
     xpByCategory[cat] = total
