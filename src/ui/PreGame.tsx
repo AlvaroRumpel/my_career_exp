@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useCareer } from './CareerContext'
 import { generateGoals } from '../engine/goals'
 import { getStyle, styleCategoryMult } from '../engine/playStyles'
@@ -15,7 +15,6 @@ function goalValue(g: Goal): string {
 
 export default function PreGame() {
   const { career, update } = useCareer()
-  const nav = useNavigate()
   const [home, setHome] = useState(true)
   const [playoffs, setPlayoffs] = useState(false)
   if (!career) return null
@@ -35,7 +34,6 @@ export default function PreGame() {
 
   function start() {
     update(c => { c.pendingContext = { home, playoffs } })
-    nav('/postgame')
   }
 
   function cancelGame() {
