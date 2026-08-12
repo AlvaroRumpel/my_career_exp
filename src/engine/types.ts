@@ -47,6 +47,8 @@ export interface Career {
   pendingInstructions: Instruction[]
   config: EngineConfig
   targetOverrides: Partial<Record<Category, string>>
+  nextGoals?: Goal[] | null
+  lastResult?: { gameId: string; instructions: Instruction[]; goalsMet: string[]; goals: Goal[] } | null
 }
 export const DEFAULT_CONFIG: EngineConfig = {
   baseCost: 100, costGrowth: 1.12,
