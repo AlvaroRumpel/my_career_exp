@@ -9,8 +9,12 @@ const tabs = [
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <nav className="flex gap-1 border-b border-zinc-800 px-4 py-2">
+    <div className="min-h-screen text-zinc-100">
+      <nav className="sticky top-0 z-10 flex items-center gap-1 border-b border-zinc-800 bg-zinc-950/90 px-4 py-2 backdrop-blur">
+        <span className="mr-3 flex items-center gap-2 whitespace-nowrap font-['Barlow_Condensed'] text-lg font-extrabold uppercase tracking-wide text-zinc-100">
+          <span className="inline-block h-3 w-3 rounded-sm bg-orange-500" />
+          Career Tracker
+        </span>
         {tabs.map(t => (
           <NavLink key={t.to} to={t.to} end={t.to === '/'}
             className={({ isActive }) =>

@@ -1,10 +1,29 @@
 @import "tailwindcss";
 
+body {
+  font-family: 'Barlow', ui-sans-serif, system-ui, sans-serif;
+  background: linear-gradient(to bottom, #09090b, #000000);
+  min-height: 100vh;
+}
+
 @layer components {
   .input {
     @apply rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100;
   }
   .btn {
     @apply rounded bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-700 disabled:opacity-40 disabled:hover:bg-zinc-800;
+  }
+  .card {
+    @apply rounded-lg border border-zinc-800 bg-zinc-900 transition-colors hover:border-zinc-700;
+  }
+  .stat {
+    font-family: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .page-title {
+    font-family: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+    @apply border-l-4 border-orange-500 pl-3 text-2xl font-extrabold uppercase tracking-wide text-zinc-100;
   }
 }

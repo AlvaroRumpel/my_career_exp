@@ -42,7 +42,7 @@ export default function CreatePlayer() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">Criar jogador</h1>
+      <h1 className="page-title">Criar jogador</h1>
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col text-sm">Nome
           <input className="input" value={name} onChange={e => setName(e.target.value)} /></label>
@@ -60,18 +60,18 @@ export default function CreatePlayer() {
           <input className="input" type="number" value={year} onChange={e => setYear(+e.target.value)} /></label>
       </div>
 
-      <h2 className="font-semibold">Atributos atuais (como estão no 2K)</h2>
+      <h2 className="font-semibold uppercase tracking-wide text-zinc-300">Atributos atuais (como estão no 2K)</h2>
       <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
         {ATTRIBUTES.map(a => (
           <label key={a.id} className="flex items-center justify-between gap-2 text-sm">
             <span className="truncate">{a.label}</span>
-            <input className="input w-16" type="number" min={25} max={99} value={attrs[a.id]}
+            <input className="input stat w-16" type="number" min={25} max={99} value={attrs[a.id]}
               onChange={e => setAttrs({ ...attrs, [a.id]: +e.target.value })} />
           </label>
         ))}
       </div>
 
-      <h2 className="font-semibold">Badges atuais</h2>
+      <h2 className="font-semibold uppercase tracking-wide text-zinc-300">Badges atuais</h2>
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {BADGES.map(b => (
           <label key={b.id} className="flex items-center justify-between gap-2 text-sm">
@@ -85,7 +85,7 @@ export default function CreatePlayer() {
       </div>
 
       <button disabled={!valid} onClick={submit}
-        className="rounded bg-orange-600 px-4 py-2 font-semibold disabled:opacity-40">
+        className="rounded bg-orange-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-orange-500 disabled:opacity-40">
         Começar carreira
       </button>
     </div>

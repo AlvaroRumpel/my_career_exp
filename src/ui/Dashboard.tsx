@@ -15,14 +15,19 @@ const CATEGORY_LABELS: Record<Category, string> = {
 }
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[]
 
+const TIER_TEXT: Record<number, string> = {
+  0: 'text-zinc-600', 1: 'text-amber-700', 2: 'text-zinc-400',
+  3: 'text-yellow-500', 4: 'text-red-500', 5: 'text-purple-500',
+}
+
 function AttrRow({ label, value, xp, cost }: { label: string; value: number; xp: number; cost: number }) {
   const pct = Math.min(100, Math.round((xp / cost) * 100))
   return (
     <div className="flex items-center gap-2 text-sm">
       <span className="w-40 truncate">{label}</span>
-      <span className="w-8 text-right font-mono">{value}</span>
-      <div className="h-2 flex-1 rounded bg-zinc-800">
-        <div className="h-2 rounded bg-orange-500" style={{ width: `${pct}%` }} />
+      <span className="stat w-8 text-right">{value}</span>
+      <div className="h-2 flex-1 rounded-full bg-zinc-800">
+        <div className="h-2 rounded-full bg-gradient-to-r from-orange-600 to-orange-400" style={{ width: `${pct}%` }} />
       </div>
     </div>
   )
@@ -91,13 +96,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 rounded border border-zinc-800 p-4">
+      <div className="card flex flex-wrap items-baseline justify-between gap-2 p-4">
         <div>
-          <h1 className="text-xl font-bold">{player.name}</h1>
+          <h1 className="font-['Barlow_Condensed'] text-2xl font-extrabold uppercase tracking-wide">{player.name}</h1>
           <p className="text-sm text-zinc-400">{player.position} · {player.team} · {age} anos</p>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold text-orange-500">{ovr} OVR</p>
+          <p className="stat text-5xl text-orange-500">{ovr} <span className="text-2xl">OVR</span></p>
           <p className="text-sm text-zinc-400">Temporada {season.year}</p>
         </div>
       </div>
@@ -144,13 +149,13 @@ export default function Dashboard() {
             const next = TIER_THRESHOLDS[tier]
             const pct = maxed ? 100 : Math.round(((progress - base) / (next - base)) * 100)
             return (
-              <div key={b.id} className="rounded border border-zinc-800 p-2 text-sm">
+              <div key={b.id} className="card p-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="truncate">{b.name}</span>
-                  <span className="font-mono text-orange-500">{TIER_NAMES[tier]}</span>
+                  <span className={`stat ${TIER_TEXT[tier]}`}>{TIER_NAMES[tier]}</span>
                 </div>
-                <div className="mt-1 h-1.5 rounded bg-zinc-800">
-                  <div className="h-1.5 rounded bg-orange-500" style={{ width: `${pct}%` }} />
+                <div className="mt-1 h-1.5 rounded-full bg-zinc-800">
+                  <div className="h-1.5 rounded-full bg-gradient-to-r from-orange-600 to-orange-400" style={{ width: `${pct}%` }} />
                 </div>
               </div>
             )
@@ -161,8 +166,8 @@ export default function Dashboard() {
       <section className="space-y-2">
         <h2 className="font-semibold">Desafios ativos</h2>
         {career.activeChallenges.map((ch, idx) => (
-          <div key={`${ch.badgeId}-${idx}`} className="flex items-center justify-between gap-2 rounded border border-zinc-800 p-2 text-sm">
-            <span>{ch.description} — sequência {ch.currentStreak}/{ch.streakLen}</span>
+          <div key={`${ch.badgeId}-${idx}`} className="card flex items-center justify-between gap-2 p-2 text-sm">
+            <span>{ch.description} — sequência <span className="stat">{ch.currentStreak}/{ch.streakLen}</span></span>
             <button className="btn" onClick={() => removeChallenge(idx)}>Remover</button>
           </div>
         ))}
@@ -180,11 +185,11 @@ export default function Dashboard() {
         <h2 className="font-semibold">Médias da temporada</h2>
         {avg ? (
           <div className="grid grid-cols-5 gap-2 text-center text-sm">
-            <div><p className="text-zinc-400">PPG</p><p className="font-mono">{avg.pts.toFixed(1)}</p></div>
-            <div><p className="text-zinc-400">RPG</p><p className="font-mono">{avg.reb.toFixed(1)}</p></div>
-            <div><p className="text-zinc-400">APG</p><p className="font-mono">{avg.ast.toFixed(1)}</p></div>
-            <div><p className="text-zinc-400">FG%</p><p className="font-mono">{avg.fga > 0 ? (avg.fgm / avg.fga * 100).toFixed(1) : '0.0'}</p></div>
-            <div><p className="text-zinc-400">3P%</p><p className="font-mono">{avg.tpa > 0 ? (avg.tpm / avg.tpa * 100).toFixed(1) : '0.0'}</p></div>
+            <div><p className="text-zinc-400">PPG</p><p className="stat text-lg">{avg.pts.toFixed(1)}</p></div>
+            <div><p className="text-zinc-400">RPG</p><p className="stat text-lg">{avg.reb.toFixed(1)}</p></div>
+            <div><p className="text-zinc-400">APG</p><p className="stat text-lg">{avg.ast.toFixed(1)}</p></div>
+            <div><p className="text-zinc-400">FG%</p><p className="stat text-lg">{avg.fga > 0 ? (avg.fgm / avg.fga * 100).toFixed(1) : '0.0'}</p></div>
+            <div><p className="text-zinc-400">3P%</p><p className="stat text-lg">{avg.tpa > 0 ? (avg.tpm / avg.tpa * 100).toFixed(1) : '0.0'}</p></div>
           </div>
         ) : (
           <p className="text-sm text-zinc-500">Nenhum jogo registrado nesta temporada.</p>

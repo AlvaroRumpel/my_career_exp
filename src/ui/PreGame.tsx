@@ -15,7 +15,7 @@ export default function PreGame() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Pré-jogo</h1>
+      <h1 className="page-title">Pré-jogo</h1>
       <div className="flex gap-2">
         <button className="btn" onClick={() => roll(true, false)}>Jogo em casa</button>
         <button className="btn" onClick={() => roll(false, false)}>Jogo fora</button>
@@ -24,7 +24,7 @@ export default function PreGame() {
       {career.nextGoals && (
         <ul className="space-y-2">
           {career.nextGoals.map(g => (
-            <li key={g.id} className="rounded border border-zinc-800 p-3">{g.description}
+            <li key={g.id} className="card border-l-4 border-l-orange-500 p-3 text-base">{g.description}
               <span className="ml-2 text-xs text-zinc-500">+XP {g.category}</span></li>
           ))}
         </ul>

@@ -58,7 +58,7 @@ export default function PostGame() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">Pós-jogo</h1>
+      <h1 className="page-title">Pós-jogo</h1>
 
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col text-sm">Adversário
@@ -89,7 +89,7 @@ export default function PostGame() {
         <div className="grid grid-cols-4 gap-2 md:grid-cols-7">
           {BOX_FIELDS.map(f => (
             <label key={f.key} className="flex flex-col text-sm">{f.label}
-              <input className="input" type="number" value={boxInput[f.key]}
+              <input className="input stat" type="number" value={boxInput[f.key]}
                 onChange={e => setBoxInput({ ...boxInput, [f.key]: +e.target.value })} />
             </label>
           ))}
@@ -102,17 +102,17 @@ export default function PostGame() {
         </ul>
       )}
 
-      <button className="btn" onClick={submit}>Registrar jogo</button>
+      <button className="btn bg-orange-600 text-white hover:bg-orange-500" onClick={submit}>Registrar jogo</button>
 
       {career.lastResult && (
-        <section className="space-y-3 rounded border border-zinc-800 p-4">
+        <section className="card space-y-3 p-4">
           <h2 className="font-semibold">Resultado</h2>
           {career.lastResult.goals.length > 0 && (
             <ul className="space-y-1 text-sm">
               {career.lastResult.goals.map(g => {
                 const met = career.lastResult!.goalsMet.includes(g.id)
                 return (
-                  <li key={g.id} className={met ? 'text-green-500' : 'text-zinc-500'}>
+                  <li key={g.id} className={met ? 'text-green-400' : 'text-zinc-500'}>
                     {met ? '✓' : '✗'} {g.description}
                   </li>
                 )
@@ -120,8 +120,8 @@ export default function PostGame() {
             </ul>
           )}
           {career.lastResult.instructions.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-zinc-400">Instruções para o 2K</h3>
+            <div className="rounded-lg border border-orange-800 bg-orange-950/40 p-3">
+              <h3 className="text-sm font-semibold text-orange-300">Instruções para o 2K</h3>
               <ul className="list-inside list-disc space-y-1 text-sm">
                 {career.lastResult.instructions.map(i => <li key={i.id}>{i.text}</li>)}
               </ul>
