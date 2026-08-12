@@ -58,8 +58,4 @@ body {
       linear-gradient(90deg, rgba(249, 115, 22, .05) 1px, transparent 1px);
     background-size: 34px 34px;
   }
-  /* transition aliases — removed in Task 7 cleanup */
-  .btn { @apply border border-hud-line2 px-3 py-2 text-center text-sm font-medium text-stone-300 disabled:opacity-40; }
-  .card { @apply border border-hud-line bg-hud-panel/85; }
-  .page-title { @apply font-display border-l-4 border-orange-500 pl-3 text-2xl font-bold uppercase tracking-wide; }
 }
