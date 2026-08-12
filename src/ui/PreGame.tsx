@@ -33,7 +33,10 @@ export default function PreGame() {
   }
 
   function start() {
-    update(c => { c.pendingContext = { home, playoffs } })
+    update(c => {
+      c.pendingContext = { home, playoffs }
+      c.lastResult = null
+    })
   }
 
   function cancelGame() {

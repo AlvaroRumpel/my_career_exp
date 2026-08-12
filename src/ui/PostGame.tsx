@@ -78,8 +78,8 @@ export default function PostGame() {
     setBoxInput(prev => ({ ...prev, [key]: +v || 0 }))
   }
 
-  // --- Resultado do jogo recém-registrado (até dar o ack)
-  if (last) {
+  // --- Resultado do jogo recém-registrado (até dar o ack); jogo em andamento tem prioridade
+  if (last && !pending) {
     const lastSeasonIdx = career.seasons.length - 1
     const lastGame = career.seasons[lastSeasonIdx].games.find(g => g.id === last.gameId)
     const breakdown = lastGame ? gameXpBreakdown(career, lastGame, lastSeasonIdx) : null
