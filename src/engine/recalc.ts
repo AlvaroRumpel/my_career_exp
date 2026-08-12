@@ -9,20 +9,29 @@ export function ageAt(career: Career, seasonIndex: number): number {
   return career.player.startAge + seasonIndex
 }
 
-export function processGame(career: Career, seasonIndex: number, game: Game): Instruction[] {
+// FIX D: global index counts only played games (box present, min > 0), in career order.
+// DNP games are skipped entirely by processGame below and never advance the index, so a
+// challenge's startGameIndex and the live/replay globalGameIndex stay comparable.
+export function playedGameCount(career: Career): number {
+  return career.seasons.reduce((sum, s) => sum + s.games.filter(g => g.box && g.box.min > 0).length, 0)
+}
+
+export function processGame(career: Career, seasonIndex: number, game: Game, globalGameIndex: number): Instruction[] {
   if (!game.box || game.box.min <= 0) return []
   const age = ageAt(career, seasonIndex)
   // metas
   game.goalsMet = game.goals.filter(g => goalMet(g, game.box!, game.context)).map(g => g.id)
   const bonus = goalBonus(game.goals, game.goalsMet)
   // XP de atributos
-  const xpResult = applyGameXp(career, game.box, game.context, age, bonus)
+  const xpResult = applyGameXp(career, game.box, game.context, age, bonus, game.id)
   // badges passivas
-  const badgeInstr = applyBadgeProgress(career.badges, game.box, game.context, career.player.position)
-  // desafios ativos (completados são renovados pra mesma badge)
+  const badgeInstr = applyBadgeProgress(career.badges, game.box, game.context, career.player.position, game.id)
+  // desafios ativos (completados são renovados pra mesma badge); desafios criados após este
+  // jogo (startGameIndex > globalGameIndex) ainda não valem para o histórico sendo processado
   for (const ch of career.activeChallenges) {
+    if (ch.startGameIndex > globalGameIndex) continue
     const done = updateChallenge(ch, career.badges, game.box)
-    if (done) Object.assign(ch, createChallenge(ch.badgeId))
+    if (done) Object.assign(ch, createChallenge(ch.badgeId, globalGameIndex + 1))
   }
   const instructions = [...xpResult.instructions, ...badgeInstr]
   career.pendingInstructions.push(...instructions)
@@ -62,11 +71,18 @@ export function recalcCareer(career: Career): void {
   }
   career.pendingInstructions = []
   for (const ch of career.activeChallenges) { ch.currentStreak = 0 }
+  let globalGameIndex = 0
   career.seasons.forEach((season, si) => {
     if (si > 0) {
       const regress = regressionInstructions(career, si)
       career.pendingInstructions.push(...regress)
     }
-    for (const g of season.games) processGame(career, si, g)
+    for (const g of season.games) {
+      processGame(career, si, g, globalGameIndex)
+      if (g.box && g.box.min > 0) globalGameIndex++
+    }
   })
+  // FIX B: already-applied instructions stay hidden across a replay (delete/import/etc.)
+  const applied = new Set(career.appliedInstructionIds ?? [])
+  career.pendingInstructions = career.pendingInstructions.filter(i => !applied.has(i.id))
 }

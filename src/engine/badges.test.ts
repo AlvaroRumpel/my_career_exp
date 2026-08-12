@@ -37,7 +37,7 @@ describe('applyBadgeProgress', () => {
     const badges: Record<string, BadgeState> = {}
     for (const b of BADGES) badges[b.id] = { progress: 0 }
     badges['deadeye'].progress = TIER_THRESHOLDS[0] - 1
-    const instructions = applyBadgeProgress(badges, shooterGame, ctx, 'SG')
+    const instructions = applyBadgeProgress(badges, shooterGame, ctx, 'SG', 'test')
     expect(badges['deadeye'].progress).toBeGreaterThanOrEqual(TIER_THRESHOLDS[0])
     expect(instructions.some(i => i.badge === 'deadeye' && i.tier === 1)).toBe(true)
   })
@@ -46,7 +46,7 @@ describe('applyBadgeProgress', () => {
     for (const b of BADGES) badges[b.id] = { progress: 0 }
     // 20 jogos variados devem tocar todas as badges (proxies incluídas)
     for (let i = 0; i < 20; i++) {
-      applyBadgeProgress(badges, { ...shooterGame, ast: 9, reb: 11, stl: 2, blk: 2, tov: 2 }, ctx, 'SF')
+      applyBadgeProgress(badges, { ...shooterGame, ast: 9, reb: 11, stl: 2, blk: 2, tov: 2 }, ctx, 'SF', `game${i}`)
     }
     for (const b of BADGES) {
       expect(badges[b.id].progress, b.id).toBeGreaterThan(0)

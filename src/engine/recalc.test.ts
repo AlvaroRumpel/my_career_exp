@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { processGame, recalcCareer, regressionInstructions, ageAt } from './recalc'
+import { processGame, recalcCareer, regressionInstructions, ageAt, playedGameCount } from './recalc'
+import { createChallenge } from './challenges'
 import { DEFAULT_CONFIG } from './types'
 import { ATTRIBUTES } from './attributes'
 import { BADGES } from './badges'
@@ -40,7 +41,7 @@ describe('processGame', () => {
     const c = freshCareer()
     const g = game(1)
     c.seasons[0].games.push(g)
-    processGame(c, 0, g)
+    processGame(c, 0, g, 0)
     const totalXp = Object.values(c.attributes).reduce((s, a) => s + a.xp + (a.value - 68) * 100, 0)
     expect(totalXp).toBeGreaterThan(0)
     expect(c.badges['dimer'].progress).toBeGreaterThan(0)
@@ -53,7 +54,7 @@ describe('recalcCareer', () => {
     for (let i = 0; i < 15; i++) {
       const g = game(i)
       c.seasons[0].games.push(g)
-      processGame(c, 0, g)
+      processGame(c, 0, g, i)
     }
     const snapshotAttrs = JSON.stringify(c.attributes)
     const snapshotBadges = JSON.stringify(c.badges)
@@ -66,7 +67,7 @@ describe('recalcCareer', () => {
     for (let i = 0; i < 10; i++) {
       const g = game(i)
       c.seasons[0].games.push(g)
-      processGame(c, 0, g)
+      processGame(c, 0, g, i)
     }
     const before = JSON.stringify(c.attributes)
     c.seasons[0].games.pop()
@@ -87,5 +88,53 @@ describe('regression', () => {
     expect(r34.every(i => i.delta === -1)).toBe(true)
     const c38 = freshCareer(38)
     expect(regressionInstructions(c38, 0).length).toBe(4)
+  })
+})
+
+describe('replay equivalence (FIX A-D)', () => {
+  it('live play (with a DNP and an active challenge) matches recalcCareer exactly, and applied instructions stay filtered', () => {
+    const c = freshCareer(34)
+    // limitless-range needs tpm >= 5; game() always has tpm: 2, so this challenge accrues
+    // progress but never completes/renews — keeps the test focused on FIX D scoping rather
+    // than the (separately correct) startGameIndex mutation that happens on renewal
+    c.activeChallenges.push(createChallenge('limitless-range', playedGameCount(c)))
+
+    for (let i = 0; i < 5; i++) {
+      const g: Game = i === 2
+        ? { // DNP: doesn't advance the played-game index, doesn't break the challenge streak
+            id: `g${i}`,
+            context: { opponent: 'CHI', home: true, playoffs: false, win: true, date: `2026-11-${i + 1}` },
+            box: { min: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, tov: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0, plusMinus: 0 },
+            goals: [], goalsMet: [],
+          }
+        : game(i)
+      const globalGameIndex = playedGameCount(c)
+      c.seasons[0].games.push(g)
+      processGame(c, 0, g, globalGameIndex)
+    }
+
+    const snapshotAttrs = JSON.stringify(c.attributes)
+    const snapshotBadges = JSON.stringify(c.badges)
+    const livePendingIds = c.pendingInstructions.map(i => i.id).sort()
+    expect(livePendingIds.length).toBeGreaterThan(2) // sanity: there's something to mark applied
+
+    // mark 2 as already applied in the 2K editor before the replay happens
+    const appliedIds = c.pendingInstructions.slice(0, 2).map(i => i.id)
+    c.appliedInstructionIds = appliedIds.slice()
+
+    recalcCareer(c)
+
+    expect(JSON.stringify(c.attributes)).toBe(snapshotAttrs)
+    expect(JSON.stringify(c.badges)).toBe(snapshotBadges)
+    const replayIds = c.pendingInstructions.map(i => i.id).sort()
+    expect(replayIds).toEqual(livePendingIds.filter(id => !appliedIds.includes(id)).sort())
+    for (const id of appliedIds) expect(c.pendingInstructions.some(i => i.id === id)).toBe(false)
+  })
+
+  it('a 36-year-old (2 seasons from startAge 35) gets regression instructions on replay', () => {
+    const c = freshCareer(35)
+    c.seasons.push({ year: c.seasons[0].year + 1, games: [] })
+    recalcCareer(c)
+    expect(c.pendingInstructions.some(i => i.id.startsWith('regress-1-'))).toBe(true)
   })
 })

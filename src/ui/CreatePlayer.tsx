@@ -31,7 +31,7 @@ export default function CreatePlayer() {
       initialAttributes: { ...attrs }, initialBadges: { ...badgeTiers },
       attributes: {}, badges: {}, activeChallenges: [],
       seasons: [{ year, games: [] }],
-      pendingInstructions: [], config: DEFAULT_CONFIG, targetOverrides: {},
+      pendingInstructions: [], appliedInstructionIds: [], config: DEFAULT_CONFIG, targetOverrides: {},
     }
     recalcCareer(c)
     create(c)

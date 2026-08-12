@@ -6,7 +6,7 @@ import { BADGES, TIER_NAMES, TIER_THRESHOLDS, tierOf, progressForTier } from '..
 import { recentAverages } from '../engine/goals'
 import { createChallenge } from '../engine/challenges'
 import { exportCareer, importCareer } from '../storage'
-import { recalcCareer } from '../engine/recalc'
+import { recalcCareer, regressionInstructions, playedGameCount } from '../engine/recalc'
 import type { Category } from '../engine/types'
 
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -47,7 +47,7 @@ export default function Dashboard() {
   const avg = recentAverages(season.games, 999)
 
   function addChallenge() {
-    update(c => { c.activeChallenges.push(createChallenge(challengeBadge)) })
+    update(c => { c.activeChallenges.push(createChallenge(challengeBadge, playedGameCount(c))) })
   }
 
   function removeChallenge(idx: number) {
@@ -59,6 +59,9 @@ export default function Dashboard() {
     update(c => {
       const last = c.seasons[c.seasons.length - 1]
       c.seasons.push({ year: last.year + 1, games: [] })
+      c.pendingInstructions.push(...regressionInstructions(c, c.seasons.length - 1))
+      c.nextGoals = null
+      c.lastResult = null
     })
   }
 
@@ -117,7 +120,10 @@ export default function Dashboard() {
           </ul>
         )}
         <button className="btn" disabled={career.pendingInstructions.length === 0}
-          onClick={() => update(c => { c.pendingInstructions = [] })}>
+          onClick={() => update(c => {
+            c.appliedInstructionIds = [...(c.appliedInstructionIds ?? []), ...c.pendingInstructions.map(i => i.id)]
+            c.pendingInstructions = []
+          })}>
           Apliquei tudo no 2K
         </button>
       </section>

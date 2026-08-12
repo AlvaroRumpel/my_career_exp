@@ -49,21 +49,21 @@ describe('applyGameXp', () => {
     // força quase-limiar em three
     const target = pickTarget(career, 'three')
     career.attributes[target].xp = upgradeCost(70, DEFAULT_CONFIG) - 1
-    const result = applyGameXp(career, goodGame, ctxLoss, 22, {})
+    const result = applyGameXp(career, goodGame, ctxLoss, 22, {}, 'test')
     const plusOne = result.instructions.find(i => i.attribute === target && i.delta === 1)
     expect(plusOne).toBeDefined()
     expect(career.attributes[target].value).toBe(71)
   })
   it('age 37 gains far less XP than age 22', () => {
     const young = makeCareer(); const old = makeCareer()
-    const ry = applyGameXp(young, goodGame, ctx, 22, {})
-    const ro = applyGameXp(old, goodGame, ctx, 37, {})
+    const ry = applyGameXp(young, goodGame, ctx, 22, {}, 'test')
+    const ro = applyGameXp(old, goodGame, ctx, 37, {}, 'test')
     expect(ro.xpByCategory.three).toBeLessThan(ry.xpByCategory.three * 0.4)
   })
   it('goal bonus is capped at 30% of game XP', () => {
     const career = makeCareer()
-    const r = applyGameXp(career, goodGame, ctx, 22, { three: 999999 })
-    const noBonus = applyGameXp(makeCareer(), goodGame, ctx, 22, {})
+    const r = applyGameXp(career, goodGame, ctx, 22, { three: 999999 }, 'test')
+    const noBonus = applyGameXp(makeCareer(), goodGame, ctx, 22, {}, 'test')
     expect(r.xpByCategory.three).toBeLessThanOrEqual(noBonus.xpByCategory.three * 1.31)
   })
   it('cascades multiple upgrades when XP exceeds multiple thresholds in one game', () => {
@@ -71,7 +71,7 @@ describe('applyGameXp', () => {
     const target = pickTarget(career, 'three')
     // Pre-populate with 3× base cost so loop will cascade through multiple upgrades
     career.attributes[target].xp = upgradeCost(70, DEFAULT_CONFIG) * 3
-    const result = applyGameXp(career, goodGame, ctx, 22, {})
+    const result = applyGameXp(career, goodGame, ctx, 22, {}, 'test')
     const threeInstructions = result.instructions.filter(i => i.attribute === target && i.delta === 1)
     // Multiple +1 instructions should be emitted for cascading upgrades
     expect(threeInstructions.length).toBeGreaterThan(1)

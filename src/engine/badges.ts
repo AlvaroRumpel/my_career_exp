@@ -79,11 +79,11 @@ export function progressForTier(tier: number): number {
   return tier <= 0 ? 0 : TIER_THRESHOLDS[tier - 1]
 }
 
-let badgeInstrSeq = 0
 export function applyBadgeProgress(
-  badges: Record<string, BadgeState>, box: BoxScore, ctx: GameContext, position: Position,
+  badges: Record<string, BadgeState>, box: BoxScore, ctx: GameContext, position: Position, gameId: string,
 ): Instruction[] {
   const instructions: Instruction[] = []
+  let n = 0 // local counter, resets per call -> deterministic ids across replays
   for (const def of BADGES) {
     const state = badges[def.id]
     if (!state) continue
@@ -92,7 +92,7 @@ export function applyBadgeProgress(
     const after = tierOf(state.progress)
     if (after > before) {
       instructions.push({
-        id: `badge-${ctx.date}-${badgeInstrSeq++}`, type: 'badge',
+        id: `badge-${gameId}-${n++}`, type: 'badge',
         text: `Suba ${def.name} para ${TIER_NAMES[after]} no 2K`,
         badge: def.id, tier: after,
       })

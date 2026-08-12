@@ -43,7 +43,7 @@ function runSeason(career: Career, seasonIndex: number, games: number): void {
   for (let i = 0; i < games; i++) {
     const g = rookieGame(i + seasonIndex * 100)
     career.seasons[seasonIndex].games.push(g)
-    processGame(career, seasonIndex, g)
+    processGame(career, seasonIndex, g, i)
   }
 }
 

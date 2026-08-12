@@ -22,20 +22,16 @@ export interface GameXpResult {
   instructions: Instruction[]
 }
 
-let instrSeq = 0
-function nextInstrId(date: string): string {
-  return `instr-${date}-${instrSeq++}`
-}
-
 export function applyGameXp(
   career: Career, box: BoxScore, ctx: GameContext, age: number,
-  goalBonus: Partial<Record<Category, number>>,
+  goalBonus: Partial<Record<Category, number>>, gameId: string,
 ): GameXpResult {
   const cfg = career.config
   const mult = qualityMultiplier(box) * ageMultiplier(age, cfg) * contextMultiplier(ctx, cfg)
   const raw = categoryXp(box, career.player.position)
   const xpByCategory = {} as Record<Category, number>
   const instructions: Instruction[] = []
+  let n = 0 // local counter, resets per call -> deterministic ids across replays
 
   for (const cat of Object.keys(raw) as Category[]) {
     const gameXp = raw[cat] * mult
@@ -58,7 +54,7 @@ export function applyGameXp(
         attr.value += 1
         const label = ATTRIBUTES.find(a => a.id === targetId)?.label ?? targetId
         instructions.push({
-          id: nextInstrId(ctx.date), type: 'attribute',
+          id: `instr-${gameId}-${n++}`, type: 'attribute',
           text: `+1 ${label} (${attr.value - 1} → ${attr.value})`,
           attribute: targetId, delta: 1,
         })

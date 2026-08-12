@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCareer } from './CareerContext'
 import { validateBoxScore } from '../engine/validation'
-import { processGame } from '../engine/recalc'
+import { processGame, playedGameCount } from '../engine/recalc'
 import type { BoxScore, Game, GameContext } from '../engine/types'
 
 const ZERO_BOX: BoxScore = {
@@ -46,8 +46,10 @@ export default function PostGame() {
         id: `game-${Date.now()}`, context, box,
         goals: c.nextGoals ?? [], goalsMet: [],
       }
+      // index = count of played games before this one (matches recalcCareer's replay order)
+      const globalGameIndex = playedGameCount(c)
       season.games.push(game)
-      const newInstructions = processGame(c, c.seasons.length - 1, game)
+      const newInstructions = processGame(c, c.seasons.length - 1, game, globalGameIndex)
       c.nextGoals = null
       c.lastResult = { gameId: game.id, instructions: newInstructions, goalsMet: game.goalsMet, goals: game.goals }
     })

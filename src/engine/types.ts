@@ -22,6 +22,7 @@ export interface BadgeState { progress: number }
 export interface Challenge {
   badgeId: string; stat: 'pts' | 'ast' | 'tpm' | 'reb' | 'stl' | 'blk'
   perGame: number; streakLen: number; currentStreak: number; description: string
+  startGameIndex: number
 }
 export type InstructionType = 'attribute' | 'badge'
 export interface Instruction {
@@ -45,6 +46,7 @@ export interface Career {
   activeChallenges: Challenge[]
   seasons: Season[]
   pendingInstructions: Instruction[]
+  appliedInstructionIds?: string[]
   config: EngineConfig
   targetOverrides: Partial<Record<Category, string>>
   nextGoals?: Goal[] | null

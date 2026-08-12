@@ -27,7 +27,7 @@ const CHALLENGE_SPECS: Record<string, { stat: Challenge['stat']; perGame: number
 }
 const FALLBACK = { stat: 'pts' as const, perGame: 15, streakLen: 3 }
 
-export function createChallenge(badgeId: string): Challenge {
+export function createChallenge(badgeId: string, startGameIndex = 0): Challenge {
   const spec = CHALLENGE_SPECS[badgeId] ?? FALLBACK
   const name = BADGES.find(b => b.id === badgeId)?.name ?? badgeId
   const statLabel: Record<Challenge['stat'], string> = {
@@ -36,6 +36,7 @@ export function createChallenge(badgeId: string): Challenge {
   return {
     badgeId, stat: spec.stat, perGame: spec.perGame, streakLen: spec.streakLen, currentStreak: 0,
     description: `${name}: ${spec.perGame}+ ${statLabel[spec.stat]} por ${spec.streakLen} jogos seguidos`,
+    startGameIndex,
   }
 }
 
