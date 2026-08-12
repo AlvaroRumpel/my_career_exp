@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCareer } from './CareerContext'
 import { generateGoals } from '../engine/goals'
 import { getStyle, styleCategoryMult } from '../engine/playStyles'
@@ -15,6 +15,7 @@ function goalValue(g: Goal): string {
 
 export default function PreGame() {
   const { career, update } = useCareer()
+  const nav = useNavigate()
   const [home, setHome] = useState(true)
   const [playoffs, setPlayoffs] = useState(false)
   if (!career) return null
@@ -24,11 +25,59 @@ export default function PreGame() {
   const style = getStyle(career.playStyle)
   const mult = preGameMultiplier(career, home, playoffs)
   const ageMult = ageMultiplier(age, career.config)
+  const pending = career.pendingContext
 
   function roll() {
     update(c => {
       c.nextGoals = generateGoals(season.games, { opponent: '', home, playoffs, win: false, date: '' }, seq)
     })
+  }
+
+  function start() {
+    update(c => { c.pendingContext = { home, playoffs } })
+    nav('/postgame')
+  }
+
+  function cancelGame() {
+    if (!window.confirm('Cancelar o jogo em andamento? As metas geradas serão descartadas.')) return
+    update(c => {
+      c.pendingContext = null
+      c.nextGoals = null
+    })
+  }
+
+  // --- Jogo em andamento
+  if (pending) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="hud-panel-hot flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="h-[7px] w-[7px] rotate-45 bg-orange-400 animate-[hudPulse_2.4s_ease-in-out_infinite]" />
+            <span className="hud-title text-[15px]">Jogo em andamento</span>
+            <span className="ml-auto font-display text-[11px] tracking-[.1em] text-orange-300 uppercase">
+              {pending.home ? 'Casa' : 'Fora'}{pending.playoffs ? ' · Playoffs' : ''}
+            </span>
+          </div>
+          <p className="text-sm text-stone-400">Jogue a partida no 2K e registre o box score quando terminar.</p>
+          {career.nextGoals && (
+            <div className="flex flex-col gap-1.5">
+              {career.nextGoals.map(g => (
+                <div key={g.id} className="flex items-center gap-2.5 bg-hud-bg/60 border-l-2 border-orange-500 px-3 py-2.5">
+                  <span className="flex-1 text-sm font-medium">{g.description}</span>
+                  <span className="font-display text-[10px] tracking-[.1em] text-stone-400 uppercase">
+                    {CATEGORY_LABELS[g.category]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="flex gap-2.5">
+          <button className="btn-ghost flex-1" onClick={cancelGame}>Cancelar jogo</button>
+          <Link to="/postgame" className="btn-cta flex-[1.3]">Ir pro registro</Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -118,7 +167,7 @@ export default function PreGame() {
           {career.nextGoals ? 'Gerar outras metas' : 'Gerar metas'}
         </button>
         {career.nextGoals && (
-          <Link to="/postgame" className="btn-cta flex-[1.3]">Estou pronto</Link>
+          <button onClick={start} className="btn-cta flex-[1.3]">Estou pronto</button>
         )}
       </div>
     </div>
