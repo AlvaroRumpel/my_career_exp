@@ -3,6 +3,7 @@ import { recalcCareer } from '../engine/recalc'
 import { ATTRIBUTES } from '../engine/attributes'
 import { BADGES } from '../engine/badges'
 import { DEFAULT_CONFIG } from '../engine/types'
+import { styleCategoryMult } from '../engine/playStyles'
 import type { BoxScore, Career, Game } from '../engine/types'
 import { categoryAverages, gameXpBreakdown, preGameMultiplier, seasonOvrDelta } from './derive'
 
@@ -61,7 +62,7 @@ describe('gameXpBreakdown', () => {
     const sum = sniper.byCategory.reduce((s, [, v]) => s + v, 0)
     expect(sniper.total).toBe(Math.round(sum))
     const three = (r: typeof sniper) => r.byCategory.find(([c]) => c === 'three')![1]
-    expect(three(sniper) / three(balanced)).toBeCloseTo(1.5, 5)
+    expect(three(sniper) / three(balanced)).toBeCloseTo(styleCategoryMult('sniper', 'three'), 5)
     // sorted desc, no zero categories
     const vals = sniper.byCategory.map(([, v]) => v)
     expect([...vals].sort((a, b) => b - a)).toEqual(vals)

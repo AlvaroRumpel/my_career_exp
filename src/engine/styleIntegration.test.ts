@@ -28,11 +28,11 @@ function makeCareer(playStyle?: string): Career {
 }
 
 describe('style multipliers in applyGameXp', () => {
-  it('focus category earns 1.5x, slow 0.7x, neutral 1.0x vs balanced', () => {
+  it('focus category earns catMult, slow shrinks, neutral 1.0x vs balanced', () => {
     const base = applyGameXp(makeCareer(), box, ctx, 22, {}, 'g1', 'balanced')
     const sniper = applyGameXp(makeCareer(), box, ctx, 22, {}, 'g1', 'sniper')
-    expect(sniper.xpByCategory.three).toBeCloseTo(base.xpByCategory.three * 1.5, 5)
-    expect(sniper.xpByCategory.inside).toBeCloseTo(base.xpByCategory.inside * 0.7, 5)
+    expect(sniper.xpByCategory.three).toBeCloseTo(base.xpByCategory.three * 1.7, 5)
+    expect(sniper.xpByCategory.inside).toBeCloseTo(base.xpByCategory.inside * 0.9, 5)
     expect(sniper.xpByCategory.defense).toBeCloseTo(base.xpByCategory.defense, 5)
   })
   it('omitting styleId behaves as balanced (backward compat)', () => {

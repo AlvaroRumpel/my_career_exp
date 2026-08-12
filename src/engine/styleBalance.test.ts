@@ -40,9 +40,13 @@ describe('style balance', () => {
   it('covers every style with a reference box', () => {
     for (const s of PLAY_STYLES) expect(REFERENCE[s.id], s.id).toBeDefined()
   })
-  it.each(PLAY_STYLES.map(s => [s.id]))('%s nets within ±2.5%% of balanced', id => {
+  it('balanced is the neutral baseline', () => {
+    expect(netMultiplier('balanced')).toBe(1)
+  })
+  // equalizado por cima: todo estilo é um upgrade parecido sobre o Equilibrado
+  it.each(PLAY_STYLES.slice(1).map(s => [s.id]))('%s nets +8%% to +18%% over balanced', id => {
     const net = netMultiplier(id)
-    expect(net, `${id} net=${net.toFixed(3)}`).toBeGreaterThanOrEqual(0.975)
-    expect(net, `${id} net=${net.toFixed(3)}`).toBeLessThanOrEqual(1.025)
+    expect(net, `${id} net=${net.toFixed(3)}`).toBeGreaterThanOrEqual(1.08)
+    expect(net, `${id} net=${net.toFixed(3)}`).toBeLessThanOrEqual(1.18)
   })
 })
