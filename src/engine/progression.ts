@@ -44,10 +44,14 @@ export function applyGameXp(
     xpByCategory[cat] = total
     if (total <= 0) continue
 
-    const targetId = pickTarget(career, cat)
-    const attr = career.attributes[targetId]
-    if (attr.value < 99) {
-      attr.xp += total
+    let remaining = total
+    // aplica no alvo atual; se cruzar limiar, sobe e re-alveja
+    while (remaining > 0) {
+      const targetId = pickTarget(career, cat)
+      const attr = career.attributes[targetId]
+      if (attr.value >= 99) break
+      attr.xp += remaining
+      remaining = 0
       const cost = upgradeCost(attr.value, cfg)
       if (attr.xp >= cost) {
         attr.xp -= cost
@@ -58,6 +62,12 @@ export function applyGameXp(
           text: `+1 ${label} (${attr.value - 1} → ${attr.value})`,
           attribute: targetId, delta: 1,
         })
+        // excesso continua no mesmo atributo (novo custo maior); loop resolve múltiplos +1
+        remaining = 0
+        if (attr.xp >= upgradeCost(attr.value, cfg)) {
+          remaining = attr.xp
+          attr.xp = 0
+        }
       }
     }
   }
