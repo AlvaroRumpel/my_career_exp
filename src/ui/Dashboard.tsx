@@ -7,6 +7,7 @@ import { recentAverages } from '../engine/goals'
 import { createChallenge } from '../engine/challenges'
 import { exportCareer, importCareer } from '../storage'
 import { recalcCareer, regressionInstructions, playedGameCount } from '../engine/recalc'
+import { PLAY_STYLES, getStyle } from '../engine/playStyles'
 import type { Category } from '../engine/types'
 
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -36,6 +37,7 @@ function AttrRow({ label, value, xp, cost }: { label: string; value: number; xp:
 export default function Dashboard() {
   const { career, update, create, reset } = useCareer()
   const [challengeBadge, setChallengeBadge] = useState(BADGES[0].id)
+  const [nextStyle, setNextStyle] = useState<string | null>(null)
 
   if (!career) return null
 
@@ -55,13 +57,16 @@ export default function Dashboard() {
   }
 
   function newSeason() {
-    if (!window.confirm('Iniciar nova temporada?')) return
+    if (!window.confirm(`Iniciar nova temporada com estilo ${getStyle(nextStyle ?? career!.playStyle).name}?`)) return
     update(c => {
       const last = c.seasons[c.seasons.length - 1]
       c.seasons.push({ year: last.year + 1, games: [] })
       c.pendingInstructions.push(...regressionInstructions(c, c.seasons.length - 1))
       c.nextGoals = null
       c.lastResult = null
+      const style = nextStyle ?? c.playStyle ?? 'balanced'
+      c.seasons[c.seasons.length - 1].playStyle = style
+      c.playStyle = style
     })
   }
 
@@ -102,7 +107,7 @@ export default function Dashboard() {
       <div className="card flex flex-wrap items-baseline justify-between gap-2 p-4">
         <div>
           <h1 className="font-['Barlow_Condensed'] text-2xl font-extrabold uppercase tracking-wide">{player.name}</h1>
-          <p className="text-sm text-zinc-400">{player.position} · {player.team} · {age} anos</p>
+          <p className="text-sm text-zinc-400">{player.position} · {player.team} · {age} anos · Estilo: {getStyle(career.playStyle).name}</p>
         </div>
         <div className="text-right">
           <p className="stat text-5xl text-orange-500">{ovr} <span className="text-2xl">OVR</span></p>
@@ -210,6 +215,10 @@ export default function Dashboard() {
             Importar JSON
             <input type="file" accept="application/json" className="hidden" onChange={handleImport} />
           </label>
+          <select className="input" value={nextStyle ?? (career.playStyle ?? 'balanced')}
+            onChange={e => setNextStyle(e.target.value)} title="Estilo da próxima temporada">
+            {PLAY_STYLES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
           <button className="btn" onClick={newSeason}>Nova temporada</button>
           <button className="btn bg-red-700 hover:bg-red-600" onClick={deleteCareer}>Apagar carreira</button>
         </div>

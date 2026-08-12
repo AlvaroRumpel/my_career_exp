@@ -5,6 +5,7 @@ import { ATTRIBUTES } from '../engine/attributes'
 import { BADGES, TIER_NAMES } from '../engine/badges'
 import { DEFAULT_CONFIG } from '../engine/types'
 import { recalcCareer } from '../engine/recalc'
+import { PLAY_STYLES } from '../engine/playStyles'
 import type { Career, Position } from '../engine/types'
 
 type QuickList = 'attrs' | 'badges'
@@ -97,6 +98,7 @@ export default function CreatePlayer() {
   const [heightCm, setHeightCm] = useState(198)
   const [startAge, setStartAge] = useState(20)
   const [year, setYear] = useState(2026)
+  const [playStyle, setPlayStyle] = useState('balanced')
   const [attrs, setAttrs] = useState<Record<string, number>>(
     Object.fromEntries(ATTRIBUTES.map(a => [a.id, 70])),
   )
@@ -112,7 +114,7 @@ export default function CreatePlayer() {
       player: { name, position, heightCm, team, startAge },
       initialAttributes: { ...attrs }, initialBadges: { ...badgeTiers },
       attributes: {}, badges: {}, activeChallenges: [],
-      seasons: [{ year, games: [] }],
+      seasons: [{ year, games: [], playStyle }], playStyle,
       pendingInstructions: [], appliedInstructionIds: [], config: DEFAULT_CONFIG, targetOverrides: {},
     }
     recalcCareer(c)
@@ -140,6 +142,12 @@ export default function CreatePlayer() {
           <input className="input" type="number" value={startAge} onChange={e => setStartAge(+e.target.value)} /></label>
         <label className="flex flex-col text-sm">Ano da temporada
           <input className="input" type="number" value={year} onChange={e => setYear(+e.target.value)} /></label>
+        <label className="flex flex-col text-sm">Estilo de jogo
+          <select className="input" value={playStyle} onChange={e => setPlayStyle(e.target.value)}>
+            {PLAY_STYLES.map(s => (
+              <option key={s.id} value={s.id}>{s.reference ? `${s.name} — ${s.reference}` : s.name}</option>
+            ))}
+          </select></label>
       </div>
 
       <div className="flex items-center justify-between">
