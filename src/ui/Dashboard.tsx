@@ -72,6 +72,7 @@ export default function Dashboard() {
       c.seasons.push({ year: last.year + 1, games: [] })
       c.pendingInstructions.push(...regressionInstructions(c, c.seasons.length - 1))
       c.nextGoals = null
+      c.pendingContext = null
       c.lastResult = null
       const style = nextStyle ?? c.playStyle ?? 'balanced'
       c.seasons[c.seasons.length - 1].playStyle = style
