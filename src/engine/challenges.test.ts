@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createChallenge, updateChallenge } from './challenges'
+import { createChallenge, updateChallenge, applyChallengeBonus } from './challenges'
 import { TIER_THRESHOLDS, tierOf } from './badges'
 import type { BadgeState, BoxScore } from './types'
 
@@ -19,18 +19,18 @@ describe('challenges', () => {
   })
   it('missing the target resets the streak', () => {
     const c = createChallenge('dimer')
-    const badges: Record<string, BadgeState> = { dimer: { progress: 0 } }
-    updateChallenge(c, badges, game({ ast: c.perGame }))
+    updateChallenge(c, game({ ast: c.perGame }))
     expect(c.currentStreak).toBe(1)
-    updateChallenge(c, badges, game({ ast: 0 }))
+    updateChallenge(c, game({ ast: 0 }))
     expect(c.currentStreak).toBe(0)
   })
   it('completing the streak advances badge 50% toward next tier', () => {
     const c = createChallenge('dimer')
     const badges: Record<string, BadgeState> = { dimer: { progress: 0 } }
     let done = false
-    for (let i = 0; i < c.streakLen; i++) done = updateChallenge(c, badges, game({ ast: c.perGame + 2 }))
+    for (let i = 0; i < c.streakLen; i++) done = updateChallenge(c, game({ ast: c.perGame + 2 }))
     expect(done).toBe(true)
+    applyChallengeBonus(badges, 'dimer')
     const gap = TIER_THRESHOLDS[0] - 0
     expect(badges.dimer.progress).toBeCloseTo(gap * 0.5, 5)
     expect(tierOf(badges.dimer.progress)).toBe(0)

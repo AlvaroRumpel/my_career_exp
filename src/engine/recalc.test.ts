@@ -200,3 +200,24 @@ describe('replay of a real PG save under affinity rules', () => {
     expect(career.pendingInstructions.filter(i => i.id.startsWith('offseason-2027-') && i.type === 'attribute').length).toBeGreaterThanOrEqual(2)
   })
 })
+
+describe('completed challenge bonus survives replay', () => {
+  it('badge bonus earned by finishing a challenge is identical after recalcCareer', () => {
+    const c = freshCareer(22)
+    // game() has ast: 8 -> dimer (8+ ast x3) completes on the 3rd game
+    c.activeChallenges.push(createChallenge('dimer', 0))
+    for (let i = 0; i < 4; i++) {
+      const g = game(i)
+      c.seasons[0].games.push(g)
+      processGame(c, 0, g, i)
+    }
+    const live = c.badges.dimer.progress
+    expect(c.completedChallenges?.length).toBe(1)
+    expect(c.completedChallenges?.[0]).toEqual({ badgeId: 'dimer', gameIndex: 2 })
+    recalcCareer(c)
+    expect(c.badges.dimer.progress).toBeCloseTo(live, 6)
+    // replaying again does not double-apply
+    recalcCareer(c)
+    expect(c.badges.dimer.progress).toBeCloseTo(live, 6)
+  })
+})

@@ -1,4 +1,4 @@
-import type { Career, Category, Game } from '../engine/types'
+import type { Career, Category, Game, Instruction } from '../engine/types'
 import { ATTRIBUTES, attributesByCategory, estimateOverall } from '../engine/attributes'
 import { ageMultiplier, contextMultiplier, qualityMultiplier } from '../engine/multipliers'
 import { categoryXp } from '../engine/categoryXp'
@@ -66,4 +66,35 @@ export function preGameMultiplier(career: Career, home: boolean, playoffs: boole
   const age = career.player.startAge + career.seasons.length - 1
   return ageMultiplier(age, career.config)
     * contextMultiplier({ opponent: '', home, playoffs, win: false, date: '' }, career.config)
+}
+
+// agrupa instruções pendentes só para exibição: +1s do mesmo atributo viram um intervalo
+// (74 → 76); badge repetida fica com o tier mais alto. Ids continuam individuais.
+export function groupInstructions(instr: Instruction[]): { key: string; type: Instruction['type']; text: string }[] {
+  const out: { key: string; type: Instruction['type']; text: string; from?: number; to?: number; label?: string }[] = []
+  const byKey = new Map<string, (typeof out)[number]>()
+  for (const i of instr) {
+    if (i.type === 'attribute' && i.attribute && i.delta === 1) {
+      const m = /\+1 (.+?) \((\d+) → (\d+)\)/.exec(i.text)
+      if (!m) { out.push({ key: i.id, type: i.type, text: i.text }); continue }
+      const key = `attr:${i.attribute}`
+      const g = byKey.get(key)
+      if (g) { g.to = Number(m[3]) } else {
+        const n = { key, type: i.type, text: '', label: m[1], from: Number(m[2]), to: Number(m[3]) }
+        byKey.set(key, n); out.push(n)
+      }
+    } else if (i.type === 'badge' && i.badge) {
+      const key = `badge:${i.badge}`
+      const g = byKey.get(key)
+      if (g) { g.text = i.text } else {
+        const n = { key, type: i.type, text: i.text }
+        byKey.set(key, n); out.push(n)
+      }
+    } else {
+      out.push({ key: i.id, type: i.type, text: i.text })
+    }
+  }
+  return out.map(g => g.from !== undefined
+    ? { key: g.key, type: g.type, text: `+${g.to! - g.from} ${g.label} (${g.from} → ${g.to})` }
+    : { key: g.key, type: g.type, text: g.text })
 }

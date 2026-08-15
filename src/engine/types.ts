@@ -46,6 +46,8 @@ export interface Career {
   attributes: Record<string, AttributeState>
   badges: Record<string, BadgeState>
   activeChallenges: Challenge[]
+  // desafios concluídos: o bônus de badge é reaplicado no replay pelo índice do jogo
+  completedChallenges?: { badgeId: string; gameIndex: number }[]
   seasons: Season[]
   pendingInstructions: Instruction[]
   appliedInstructionIds?: string[]

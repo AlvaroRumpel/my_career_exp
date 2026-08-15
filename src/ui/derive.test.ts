@@ -77,3 +77,28 @@ describe('preGameMultiplier', () => {
     expect(preGameMultiplier(c, false, true)).toBeCloseTo(1.3 * 1.15 * 1.5, 5)
   })
 })
+
+import { groupInstructions } from './derive'
+import type { Instruction } from '../engine/types'
+
+describe('groupInstructions', () => {
+  it('merges consecutive +1s of the same attribute into one range and keeps highest badge tier', () => {
+    const instr: Instruction[] = [
+      { id: 'a', type: 'attribute', text: '+1 Three-Point Shot (74 → 75)', attribute: 'threePoint', delta: 1 },
+      { id: 'b', type: 'badge', text: 'Suba Deadeye para Bronze no 2K', badge: 'deadeye', tier: 1 },
+      { id: 'c', type: 'attribute', text: '+1 Pass Vision (79 → 80)', attribute: 'passVision', delta: 1 },
+      { id: 'd', type: 'attribute', text: 'Off-season 2027: +1 Three-Point Shot (75 → 76)', attribute: 'threePoint', delta: 1 },
+      { id: 'e', type: 'badge', text: 'Suba Deadeye para Prata no 2K', badge: 'deadeye', tier: 2 },
+      { id: 'f', type: 'attribute', text: '-1 Speed (regressão, idade 35)', attribute: 'speed', delta: -1 },
+    ]
+    const g = groupInstructions(instr)
+    expect(g.map(x => x.text)).toEqual([
+      '+2 Three-Point Shot (74 → 76)',
+      'Suba Deadeye para Prata no 2K',
+      '+1 Pass Vision (79 → 80)',
+      '-1 Speed (regressão, idade 35)',
+    ])
+    expect(g[0].type).toBe('attribute')
+    expect(g[1].type).toBe('badge')
+  })
+})

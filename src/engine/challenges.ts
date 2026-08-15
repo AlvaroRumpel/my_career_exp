@@ -40,19 +40,19 @@ export function createChallenge(badgeId: string, startGameIndex = 0): Challenge 
   }
 }
 
-export function updateChallenge(
-  challenge: Challenge, badges: Record<string, BadgeState>, box: BoxScore,
-): boolean {
+export function updateChallenge(challenge: Challenge, box: BoxScore): boolean {
   if (box.min <= 0) return false // DNP não quebra streak
   const value = box[challenge.stat]
   challenge.currentStreak = value >= challenge.perGame ? challenge.currentStreak + 1 : 0
-  if (challenge.currentStreak < challenge.streakLen) return false
-  const state = badges[challenge.badgeId]
-  if (state) {
-    const tier = tierOf(state.progress)
-    const nextThreshold = tier >= 5 ? state.progress : TIER_THRESHOLDS[tier]
-    const gap = Math.max(nextThreshold - state.progress, 0)
-    state.progress += gap * 0.5
-  }
-  return true
+  return challenge.currentStreak >= challenge.streakLen
+}
+
+// bônus por desafio concluído: metade do que falta pro próximo tier
+export function applyChallengeBonus(badges: Record<string, BadgeState>, badgeId: string): void {
+  const state = badges[badgeId]
+  if (!state) return
+  const tier = tierOf(state.progress)
+  const nextThreshold = tier >= 5 ? state.progress : TIER_THRESHOLDS[tier]
+  const gap = Math.max(nextThreshold - state.progress, 0)
+  state.progress += gap * 0.5
 }

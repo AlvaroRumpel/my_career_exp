@@ -10,7 +10,7 @@ import { recalcCareer, playedGameCount } from '../engine/recalc'
 import { offseasonTotal } from '../engine/offseason'
 import { PLAY_STYLES, getStyle, styleCategoryMult } from '../engine/playStyles'
 import { attrWeight, badgeWeight } from '../engine/affinity'
-import { CATEGORIES, CATEGORY_LABELS, CATEGORY_ABBR, categoryAverages, seasonOvrDelta, gameXpBreakdown } from './derive'
+import { CATEGORIES, CATEGORY_LABELS, CATEGORY_ABBR, categoryAverages, seasonOvrDelta, gameXpBreakdown, groupInstructions } from './derive'
 import type { Category } from '../engine/types'
 
 const TIER_STYLE: Record<number, { border: string; label: string; seg: string; grad: boolean }> = {
@@ -171,8 +171,8 @@ export default function Dashboard() {
             </span>
           </div>
           <div className="flex flex-col gap-1.5">
-            {career.pendingInstructions.map(i => (
-              <div key={i.id}
+            {groupInstructions(career.pendingInstructions).map(i => (
+              <div key={i.key}
                 className={`bg-hud-bg/60 border-l-2 px-3 py-2.5 text-sm font-medium ${i.type === 'badge' ? 'border-slate-300' : 'border-amber-400'}`}>
                 {i.text}
               </div>

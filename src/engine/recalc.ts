@@ -2,7 +2,7 @@ import type { Career, Category, Game, Instruction } from './types'
 import { ATTRIBUTES, PHYSICAL_REGRESSION_ORDER, estimateOverall } from './attributes'
 import { BADGES, applyBadgeProgress, progressForTier } from './badges'
 import { applyGameXp } from './progression'
-import { updateChallenge, createChallenge } from './challenges'
+import { updateChallenge, createChallenge, applyChallengeBonus } from './challenges'
 import { goalMet, goalBonus } from './goals'
 import { applyOffseason } from './offseason'
 
@@ -36,8 +36,18 @@ export function processGame(
   // jogo (startGameIndex > globalGameIndex) ainda não valem para o histórico sendo processado
   for (const ch of career.activeChallenges) {
     if (ch.startGameIndex > globalGameIndex) continue
-    const done = updateChallenge(ch, career.badges, game.box)
-    if (done) Object.assign(ch, createChallenge(ch.badgeId, globalGameIndex + 1))
+    const done = updateChallenge(ch, game.box)
+    if (done) {
+      const list = (career.completedChallenges ??= [])
+      if (!list.some(x => x.badgeId === ch.badgeId && x.gameIndex === globalGameIndex)) {
+        list.push({ badgeId: ch.badgeId, gameIndex: globalGameIndex })
+      }
+      Object.assign(ch, createChallenge(ch.badgeId, globalGameIndex + 1))
+    }
+  }
+  // bônus de desafios concluídos neste jogo (registro sobrevive ao replay; ver types.completedChallenges)
+  for (const done of career.completedChallenges ?? []) {
+    if (done.gameIndex === globalGameIndex) applyChallengeBonus(career.badges, done.badgeId)
   }
   const instructions = [...xpResult.instructions, ...badgeInstr]
   career.pendingInstructions.push(...instructions)
