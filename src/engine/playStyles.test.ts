@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PLAY_STYLES, getStyle, styleCategoryMult, styleBadgeMult } from './playStyles'
+import { PLAY_STYLES, getStyle, styleCategoryMult } from './playStyles'
 import { BADGES } from './badges'
 
 describe('play style catalog', () => {
@@ -35,8 +35,5 @@ describe('play style catalog', () => {
     expect(styleCategoryMult('sniper', 'defense')).toBe(1.0)
     expect(styleCategoryMult(undefined, 'three')).toBe(1.0)
     expect(styleCategoryMult('unknown-id', 'three')).toBe(1.0)
-    expect(styleBadgeMult('sniper', 'deadeye')).toBe(1.5)
-    expect(styleBadgeMult('sniper', 'dimer')).toBe(1.0)
-    expect(styleBadgeMult(undefined, 'deadeye')).toBe(1.0)
   })
 })

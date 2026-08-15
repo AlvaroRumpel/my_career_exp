@@ -61,7 +61,3 @@ export function getStyle(id?: string | null): PlayStyle {
 export function styleCategoryMult(id: string | undefined, cat: Category): number {
   return getStyle(id).catMults[cat] ?? 1.0
 }
-
-export function styleBadgeMult(id: string | undefined, badgeId: string): number {
-  return getStyle(id).focusBadges.includes(badgeId) ? 1.5 : 1.0
-}

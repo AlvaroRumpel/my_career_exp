@@ -42,13 +42,13 @@ describe('style multipliers in applyGameXp', () => {
   })
 })
 
-describe('style multipliers in applyBadgeProgress', () => {
-  it('focus badge progresses 1.5x', () => {
+describe('style affinity in applyBadgeProgress', () => {
+  it('focus badge progresses faster, unrelated badge unchanged', () => {
     const mk = () => Object.fromEntries(BADGES.map(b => [b.id, { progress: 0 }])) as Record<string, BadgeState>
     const base = mk(); const sniper = mk()
-    applyBadgeProgress(base, box, ctx, 'SG', 'g1', 'balanced')
-    applyBadgeProgress(sniper, box, ctx, 'SG', 'g1', 'sniper')
-    expect(sniper['deadeye'].progress).toBeCloseTo(base['deadeye'].progress * 1.5, 5)
+    applyBadgeProgress(base, box, ctx, 'SG', 196, 'g1', 'balanced')
+    applyBadgeProgress(sniper, box, ctx, 'SG', 196, 'g1', 'sniper')
+    expect(sniper['deadeye'].progress).toBeGreaterThan(base['deadeye'].progress)
     expect(sniper['dimer'].progress).toBeCloseTo(base['dimer'].progress, 5)
   })
 })

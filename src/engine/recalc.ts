@@ -26,7 +26,7 @@ export function processGame(career: Career, seasonIndex: number, game: Game, glo
   // XP de atributos
   const xpResult = applyGameXp(career, game.box, game.context, age, bonus, game.id, styleId)
   // badges passivas
-  const badgeInstr = applyBadgeProgress(career.badges, game.box, game.context, career.player.position, game.id, styleId)
+  const badgeInstr = applyBadgeProgress(career.badges, game.box, game.context, career.player.position, career.player.heightCm, game.id, styleId)
   // desafios ativos (completados são renovados pra mesma badge); desafios criados após este
   // jogo (startGameIndex > globalGameIndex) ainda não valem para o histórico sendo processado
   for (const ch of career.activeChallenges) {

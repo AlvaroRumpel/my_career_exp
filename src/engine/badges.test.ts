@@ -37,7 +37,7 @@ describe('applyBadgeProgress', () => {
     const badges: Record<string, BadgeState> = {}
     for (const b of BADGES) badges[b.id] = { progress: 0 }
     badges['deadeye'].progress = TIER_THRESHOLDS[0] - 1
-    const instructions = applyBadgeProgress(badges, shooterGame, ctx, 'SG', 'test')
+    const instructions = applyBadgeProgress(badges, shooterGame, ctx, 'SG', 196, 'test')
     expect(badges['deadeye'].progress).toBeGreaterThanOrEqual(TIER_THRESHOLDS[0])
     expect(instructions.some(i => i.badge === 'deadeye' && i.tier === 1)).toBe(true)
   })
@@ -46,10 +46,29 @@ describe('applyBadgeProgress', () => {
     for (const b of BADGES) badges[b.id] = { progress: 0 }
     // 20 jogos variados devem tocar todas as badges (proxies incluídas)
     for (let i = 0; i < 20; i++) {
-      applyBadgeProgress(badges, { ...shooterGame, ast: 9, reb: 11, stl: 2, blk: 2, tov: 2 }, ctx, 'SF', `game${i}`)
+      applyBadgeProgress(badges, { ...shooterGame, ast: 9, reb: 11, stl: 2, blk: 2, tov: 2 }, ctx, 'SF', 200, `game${i}`)
     }
     for (const b of BADGES) {
       expect(badges[b.id].progress, b.id).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('position affects badges as weight, not gate', () => {
+  const mk = () => Object.fromEntries(BADGES.map(b => [b.id, { progress: 0 }])) as Record<string, BadgeState>
+  const bigGame: BoxScore = { min: 30, pts: 20, reb: 10, ast: 3, stl: 1, blk: 3, tov: 1, fgm: 8, fga: 12, tpm: 0, tpa: 0, ftm: 4, fta: 6, plusMinus: 8 }
+  it('PG still progresses Post Lockdown, slower than a C', () => {
+    const pg = mk(); const c = mk()
+    applyBadgeProgress(pg, bigGame, ctx, 'PG', 184, 'g')
+    applyBadgeProgress(c, bigGame, ctx, 'C', 217, 'g')
+    expect(pg['post-lockdown'].progress).toBeGreaterThan(0)
+    expect(c['post-lockdown'].progress).toBeGreaterThan(pg['post-lockdown'].progress * 2)
+  })
+  it('C still progresses Ankle Assassin, slower than a PG', () => {
+    const pg = mk(); const c = mk()
+    applyBadgeProgress(pg, { ...bigGame, ast: 7 }, ctx, 'PG', 184, 'g')
+    applyBadgeProgress(c, { ...bigGame, ast: 7 }, ctx, 'C', 217, 'g')
+    expect(c['ankle-assassin'].progress).toBeGreaterThan(0)
+    expect(pg['ankle-assassin'].progress).toBeGreaterThan(c['ankle-assassin'].progress)
   })
 })
