@@ -5,7 +5,8 @@ export const STORAGE_KEY = 'nba2k25-career'
 
 // saves antigos podem não ter campos novos de config
 function withDefaults(c: Career): Career {
-  return { ...c, config: { ...DEFAULT_CONFIG, ...(c.config ?? {}) } }
+  const cfg = c.config ?? {} as Partial<Career['config']>
+  return { ...c, config: { ...DEFAULT_CONFIG, ...cfg, ageMults: { ...DEFAULT_CONFIG.ageMults, ...(cfg.ageMults ?? {}) } } }
 }
 
 export function saveCareer(career: Career, storage: Storage = localStorage): void {

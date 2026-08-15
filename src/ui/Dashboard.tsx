@@ -62,7 +62,6 @@ export default function Dashboard() {
   const wins = playedGames.filter(g => g.context.win).length
   const seasonXpTotal = playedGames.reduce((s, g) => s + gameXpBreakdown(career, g, seasons.length - 1).total, 0)
   const offTotal = Math.round(offseasonTotal(career.config, age, seasonXpTotal))
-  const canClose = playedGames.length > 0 && primary !== secondary
   const attrValues = Object.fromEntries(ATTRIBUTES.map(a => [a.id, career.attributes[a.id]?.value ?? 0]))
   const ovr = estimateOverall(attrValues, player.position)
   const delta = seasonOvrDelta(career)
@@ -369,15 +368,16 @@ export default function Dashboard() {
         </div>
         {primary === secondary && <span className="text-xs text-red-400">Escolha dois focos diferentes.</span>}
         <select className="input text-sm" value={nextStyle ?? (career.playStyle ?? 'balanced')}
-          onChange={e => setNextStyle(e.target.value)} title="Estilo da próxima temporada">
+          onChange={e => setNextStyle(e.target.value)} title="Estilo da próxima temporada (não afeta o pacote)">
           {PLAY_STYLES.map(s => <option key={s.id} value={s.id}>{s.reference ? `${s.name} — ${s.reference}` : s.name}</option>)}
         </select>
+        <span className="font-display text-[9px] tracking-[.1em] text-hud-mut uppercase">Estilo vale a partir da próxima temporada</span>
         <div className="flex items-center justify-between">
           <span className="font-display text-[10px] tracking-[.1em] text-hud-mut uppercase">
-            Pacote ≈ {offTotal} XP · 50% geral / 35% 1º / 15% 2º
+            {playedGames.length > 0 ? `Pacote ≈ ${offTotal} XP · 50% geral / 35% 1º / 15% 2º` : 'Sem jogos nesta temporada — sem pacote'}
           </span>
           <button className="border border-orange-500/40 px-3 py-2 text-sm font-semibold text-orange-300 disabled:opacity-40"
-            disabled={!canClose && playedGames.length > 0} onClick={closeSeason}>
+            disabled={playedGames.length > 0 && primary === secondary} onClick={closeSeason}>
             {playedGames.length > 0 ? 'Fechar temporada' : 'Nova temporada'}
           </button>
         </div>

@@ -75,4 +75,14 @@ describe('calibration targets', () => {
     expect(afterOff - afterSeason).toBeGreaterThanOrEqual(1)
     expect(afterOff - afterSeason).toBeLessThanOrEqual(2)
   })
+  it('37-year-old season + offseason stays at most +1 OVR', () => {
+    const c = makeCareer(37, 80)
+    const before = estimateOverall(Object.fromEntries(Object.entries(c.attributes).map(([k, v]) => [k, v.value])), 'SG')
+    runSeason(c, 0, 82)
+    c.seasons[0].offseason = { primary: 'three', secondary: 'mid' }
+    c.seasons.push({ year: 2027, games: [] })
+    recalcCareer(c)
+    const after = estimateOverall(Object.fromEntries(Object.entries(c.attributes).map(([k, v]) => [k, v.value])), 'SG')
+    expect(after - before).toBeLessThanOrEqual(1)
+  })
 })

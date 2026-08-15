@@ -4,11 +4,11 @@ import { distributeCategoryXp } from './progression'
 import { BADGES, tierOf, TIER_NAMES } from './badges'
 import { badgeWeight } from './affinity'
 
-export const OFFSEASON_SPREAD = 0.5
-export const OFFSEASON_PRIMARY = 0.35
-export const OFFSEASON_SECONDARY = 0.15
+const OFFSEASON_SPREAD = 0.5
+const OFFSEASON_PRIMARY = 0.35
+const OFFSEASON_SECONDARY = 0.15
 // empurrão universal ≈ 3 jogos de proxy(0.5)+trickle(0.05), escalado por afinidade
-export const OFFSEASON_BADGE_UNITS = 3 * 0.55
+const OFFSEASON_BADGE_UNITS = 3 * 0.55
 export const CATEGORY_LIST: Category[] = ['inside', 'mid', 'three', 'ft', 'playmaking', 'rebounding', 'defense', 'physical']
 
 export function offseasonTotal(cfg: EngineConfig, age: number, seasonXp: number): number {

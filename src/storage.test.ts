@@ -64,4 +64,15 @@ describe('config merge for old saves', () => {
     expect(c.config.baseCost).toBe(120)
     expect(c.config.offseasonShare).toBe(DEFAULT_CONFIG.offseasonShare)
   })
+  it('deep-merges ageMults so legacy partials keep default fields', () => {
+    const store = memoryStorage()
+    const legacy = { player: { name: 'X', position: 'PG', heightCm: 190, team: 'T', startAge: 20 },
+      initialAttributes: {}, initialBadges: {}, attributes: {}, badges: {}, activeChallenges: [],
+      seasons: [{ year: 2026, games: [] }], pendingInstructions: [], targetOverrides: {},
+      config: { ageMults: { u21: 1.5 } as Career['config']['ageMults'] } }
+    store.setItem(STORAGE_KEY, JSON.stringify(legacy))
+    const c = loadCareer(store)!
+    expect(c.config.ageMults.u21).toBe(1.5)
+    expect(c.config.ageMults.prime).toBe(DEFAULT_CONFIG.ageMults.prime)
+  })
 })
