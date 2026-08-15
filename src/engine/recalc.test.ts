@@ -196,5 +196,7 @@ describe('replay of a real PG save under affinity rules', () => {
     const moved = ['passAccuracy', 'ballHandle', 'speedWithBall', 'passVision']
       .filter(id => career.attributes[id].xp > 0 || career.attributes[id].value > career.initialAttributes[id])
     expect(moved.length).toBeGreaterThanOrEqual(3)
+    expect(career.pendingInstructions.some(i => i.id.startsWith('offseason-2027-'))).toBe(true)
+    expect(career.pendingInstructions.filter(i => i.id.startsWith('offseason-2027-') && i.type === 'attribute').length).toBeGreaterThanOrEqual(2)
   })
 })

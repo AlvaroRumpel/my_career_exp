@@ -198,7 +198,13 @@
           ],
           "goalsMet": ["goal-27-ast"]
         }
-      ]
+      ],
+      "offseason": { "primary": "playmaking", "secondary": "mid" }
+    },
+    {
+      "year": 2028,
+      "games": [],
+      "playStyle": "maestro"
     }
   ],
   "pendingInstructions": [],
@@ -209,7 +215,9 @@
     "playoffsMult": 1.5,
     "awayMult": 1.15,
     "winMult": 1.1,
-    "goalBonusCap": 0.3
+    "goalBonusCap": 0.3,
+    "offseasonBase": 450,
+    "offseasonShare": 0.2
   },
   "targetOverrides": {}
 }
