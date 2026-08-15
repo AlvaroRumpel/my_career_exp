@@ -5,6 +5,7 @@ import { DEFAULT_CONFIG } from './types'
 import { ATTRIBUTES } from './attributes'
 import { BADGES } from './badges'
 import type { Career, Game } from './types'
+import fixture from './fixtures/pg-save.json'
 
 function freshCareer(startAge = 20): Career {
   const initialAttributes: Record<string, number> = {}
@@ -136,5 +137,20 @@ describe('replay equivalence (FIX A-D)', () => {
     c.seasons.push({ year: c.seasons[0].year + 1, games: [] })
     recalcCareer(c)
     expect(c.pendingInstructions.some(i => i.id.startsWith('regress-1-'))).toBe(true)
+  })
+})
+
+describe('replay of a real PG save under affinity rules', () => {
+  it('recalculates without throwing, all attributes >= initial, post badges > 0', () => {
+    const career = structuredClone(fixture) as unknown as Career
+    recalcCareer(career)
+    for (const a of ATTRIBUTES) {
+      expect(career.attributes[a.id].value).toBeGreaterThanOrEqual(career.initialAttributes[a.id])
+    }
+    expect(BADGES.filter(b => career.badges[b.id].progress > 0).length).toBeGreaterThanOrEqual(30)
+    // vários atributos da mesma categoria devem ter andado (não só o mais fraco)
+    const moved = ['passAccuracy', 'ballHandle', 'speedWithBall', 'passVision']
+      .filter(id => career.attributes[id].xp > 0 || career.attributes[id].value > career.initialAttributes[id])
+    expect(moved.length).toBeGreaterThanOrEqual(3)
   })
 })

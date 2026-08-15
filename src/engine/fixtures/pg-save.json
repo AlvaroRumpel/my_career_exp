@@ -1,0 +1,215 @@
+{
+  "player": {
+    "name": "Álvaro Rumpel ",
+    "position": "PG",
+    "heightCm": 196,
+    "team": "Bulls",
+    "startAge": 19
+  },
+  "initialAttributes": {
+    "closeShot": 81,
+    "layup": 77,
+    "standingDunk": 55,
+    "drivingDunk": 71,
+    "postHook": 53,
+    "postFade": 60,
+    "postControl": 58,
+    "drawFoul": 58,
+    "midRange": 75,
+    "shotIQ": 80,
+    "offConsistency": 80,
+    "threePoint": 65,
+    "freeThrow": 80,
+    "passAccuracy": 70,
+    "ballHandle": 80,
+    "speedWithBall": 75,
+    "passIQ": 83,
+    "passVision": 75,
+    "interiorD": 57,
+    "perimeterD": 70,
+    "steal": 73,
+    "block": 58,
+    "helpDefenseIQ": 75,
+    "passPerception": 78,
+    "defConsistency": 79,
+    "offRebound": 55,
+    "defRebound": 62,
+    "speed": 77,
+    "agility": 74,
+    "strength": 84,
+    "vertical": 72,
+    "stamina": 85,
+    "hustle": 79,
+    "durability": 85,
+    "intangibles": 75
+  },
+  "initialBadges": {
+    "aerial-wizard": 0,
+    "float-game": 0,
+    "hook-specialist": 0,
+    "layup-mixmaster": 0,
+    "paint-prodigy": 0,
+    "physical-finisher": 0,
+    "post-fade-phenom": 0,
+    "post-powerhouse": 0,
+    "post-up-poet": 0,
+    "posterizer": 0,
+    "rise-up": 0,
+    "deadeye": 0,
+    "limitless-range": 0,
+    "mini-marksman": 0,
+    "set-shot-specialist": 0,
+    "shifty-shooter": 0,
+    "ankle-assassin": 0,
+    "bail-out": 0,
+    "break-starter": 0,
+    "dimer": 0,
+    "handles-for-days": 0,
+    "lightning-launch": 0,
+    "strong-handle": 0,
+    "unpluckable": 0,
+    "versatile-visionary": 0,
+    "challenger": 0,
+    "glove": 0,
+    "high-flying-denier": 0,
+    "immovable-enforcer": 0,
+    "interceptor": 0,
+    "off-ball-pest": 0,
+    "on-ball-menace": 0,
+    "paint-patroller": 0,
+    "pick-dodger": 0,
+    "post-lockdown": 0,
+    "boxout-beast": 0,
+    "rebound-chaser": 0,
+    "brick-wall": 0,
+    "slippery-off-ball": 0,
+    "pogo-stick": 0
+  },
+  "attributes": {},
+  "badges": {},
+  "activeChallenges": [],
+  "seasons": [
+    {
+      "year": 2027,
+      "playStyle": "maestro",
+      "games": [
+        {
+          "id": "game-1786585545972",
+          "context": { "opponent": "Wizards", "home": true, "playoffs": false, "win": false, "date": "2026-08-13" },
+          "box": { "min": 19, "pts": 13, "reb": 1, "ast": 2, "stl": 0, "blk": 0, "tov": 2, "fgm": 6, "fga": 7, "tpm": 0, "tpa": 0, "ftm": 1, "fta": 1, "plusMinus": 8 },
+          "goals": [
+            { "id": "goal-18-pts", "category": "mid", "kind": "pts", "target": 13, "description": "Marque 13+ pontos" },
+            { "id": "goal-18-reb", "category": "rebounding", "kind": "reb", "target": 5, "description": "Pegue 5+ rebotes" }
+          ],
+          "goalsMet": ["goal-18-pts"]
+        },
+        {
+          "id": "game-1786586284651",
+          "context": { "opponent": "Bulls", "home": true, "playoffs": false, "win": true, "date": "2026-08-13" },
+          "box": { "min": 12, "pts": 2, "reb": 2, "ast": 1, "stl": 0, "blk": 0, "tov": 0, "fgm": 1, "fga": 4, "tpm": 0, "tpa": 1, "ftm": 0, "fta": 0, "plusMinus": 0 },
+          "goals": [
+            { "id": "goal-19-ast", "category": "playmaking", "kind": "ast", "target": 3, "description": "Dê 3+ assistências" },
+            { "id": "goal-19-stocks", "category": "defense", "kind": "stocks", "target": 2, "description": "Some 2+ roubos+tocos" },
+            { "id": "goal-19-tpPct", "category": "three", "kind": "tpPct", "target": 0.4, "description": "Acerte 40%+ de 3 (mín. 4 tentativas)" }
+          ],
+          "goalsMet": []
+        },
+        {
+          "id": "game-1786587218464",
+          "context": { "opponent": "Wolves", "home": false, "playoffs": false, "win": false, "date": "2026-08-13" },
+          "box": { "min": 24, "pts": 7, "reb": 2, "ast": 4, "stl": 0, "blk": 0, "tov": 1, "fgm": 3, "fga": 8, "tpm": 1, "tpa": 3, "ftm": 0, "fta": 0, "plusMinus": 5 },
+          "goals": [
+            { "id": "goal-20-awayWin", "category": "defense", "kind": "awayWin", "target": 1, "description": "Vença fora de casa" },
+            { "id": "goal-20-ast", "category": "playmaking", "kind": "ast", "target": 3, "description": "Dê 3+ assistências" }
+          ],
+          "goalsMet": ["goal-20-ast"]
+        },
+        {
+          "id": "game-1786588287633",
+          "context": { "opponent": "Bucks", "home": false, "playoffs": false, "win": true, "date": "2026-08-13" },
+          "box": { "min": 25, "pts": 10, "reb": 3, "ast": 3, "stl": 0, "blk": 1, "tov": 0, "fgm": 3, "fga": 10, "tpm": 0, "tpa": 2, "ftm": 4, "fta": 4, "plusMinus": 7 },
+          "goals": [
+            { "id": "goal-21-pts", "category": "mid", "kind": "pts", "target": 10, "description": "Marque 10+ pontos" },
+            { "id": "goal-21-reb", "category": "rebounding", "kind": "reb", "target": 4, "description": "Pegue 4+ rebotes" },
+            { "id": "goal-21-fgPct", "category": "inside", "kind": "fgPct", "target": 0.5, "description": "Acerte 50%+ dos arremessos (mín. 8 tentativas)" }
+          ],
+          "goalsMet": ["goal-21-pts"]
+        },
+        {
+          "id": "game-1786588593953",
+          "context": { "opponent": "Nets", "home": false, "playoffs": false, "win": false, "date": "2026-08-13" },
+          "box": { "min": 23, "pts": 10, "reb": 2, "ast": 2, "stl": 2, "blk": 0, "tov": 1, "fgm": 2, "fga": 4, "tpm": 0, "tpa": 1, "ftm": 6, "fta": 6, "plusMinus": -16 },
+          "goals": [
+            { "id": "goal-22-ast", "category": "playmaking", "kind": "ast", "target": 4, "description": "Dê 4+ assistências" },
+            { "id": "goal-22-stocks", "category": "defense", "kind": "stocks", "target": 2, "description": "Some 2+ roubos+tocos" }
+          ],
+          "goalsMet": ["goal-22-stocks"]
+        },
+        {
+          "id": "game-1786588681295",
+          "context": { "opponent": "Pistons", "home": true, "playoffs": false, "win": false, "date": "2026-08-13" },
+          "box": { "min": 22, "pts": 12, "reb": 5, "ast": 8, "stl": 1, "blk": 2, "tov": 2, "fgm": 3, "fga": 10, "tpm": 1, "tpa": 2, "ftm": 5, "fta": 5, "plusMinus": 6 },
+          "goals": [
+            { "id": "goal-23-tpPct", "category": "three", "kind": "tpPct", "target": 0.4, "description": "Acerte 40%+ de 3 (mín. 4 tentativas)" },
+            { "id": "goal-23-ast", "category": "playmaking", "kind": "ast", "target": 3, "description": "Dê 3+ assistências" },
+            { "id": "goal-23-stocks", "category": "defense", "kind": "stocks", "target": 2, "description": "Some 2+ roubos+tocos" }
+          ],
+          "goalsMet": ["goal-23-ast", "goal-23-stocks"]
+        },
+        {
+          "id": "game-1786588782070",
+          "context": { "opponent": "Okc", "home": false, "playoffs": false, "win": true, "date": "2026-08-13" },
+          "box": { "min": 23, "pts": 15, "reb": 6, "ast": 7, "stl": 2, "blk": 1, "tov": 3, "fgm": 7, "fga": 13, "tpm": 1, "tpa": 2, "ftm": 0, "fta": 0, "plusMinus": 8 },
+          "goals": [
+            { "id": "goal-24-stocks", "category": "defense", "kind": "stocks", "target": 2, "description": "Some 2+ roubos+tocos" },
+            { "id": "goal-24-tpPct", "category": "three", "kind": "tpPct", "target": 0.4, "description": "Acerte 40%+ de 3 (mín. 4 tentativas)" }
+          ],
+          "goalsMet": ["goal-24-stocks"]
+        },
+        {
+          "id": "game-1786588856299",
+          "context": { "opponent": "Mavs", "home": false, "playoffs": false, "win": false, "date": "2026-08-13" },
+          "box": { "min": 26, "pts": 19, "reb": 4, "ast": 2, "stl": 2, "blk": 0, "tov": 3, "fgm": 7, "fga": 13, "tpm": 1, "tpa": 1, "ftm": 4, "fta": 7, "plusMinus": -1 },
+          "goals": [
+            { "id": "goal-25-fgPct", "category": "inside", "kind": "fgPct", "target": 0.5, "description": "Acerte 50%+ dos arremessos (mín. 8 tentativas)" },
+            { "id": "goal-25-awayWin", "category": "defense", "kind": "awayWin", "target": 1, "description": "Vença fora de casa" },
+            { "id": "goal-25-ast", "category": "playmaking", "kind": "ast", "target": 5, "description": "Dê 5+ assistências" }
+          ],
+          "goalsMet": ["goal-25-fgPct"]
+        },
+        {
+          "id": "game-1786588924670",
+          "context": { "opponent": "Suns", "home": false, "playoffs": false, "win": true, "date": "2026-08-13" },
+          "box": { "min": 26, "pts": 20, "reb": 3, "ast": 1, "stl": 1, "blk": 1, "tov": 2, "fgm": 6, "fga": 15, "tpm": 1, "tpa": 1, "ftm": 7, "fta": 7, "plusMinus": 3 },
+          "goals": [
+            { "id": "goal-26-tpPct", "category": "three", "kind": "tpPct", "target": 0.4, "description": "Acerte 40%+ de 3 (mín. 4 tentativas)" },
+            { "id": "goal-26-pts", "category": "mid", "kind": "pts", "target": 15, "description": "Marque 15+ pontos" }
+          ],
+          "goalsMet": ["goal-26-pts"]
+        },
+        {
+          "id": "game-1786589020581",
+          "context": { "opponent": "Pelicans", "home": true, "playoffs": false, "win": true, "date": "2026-08-13" },
+          "box": { "min": 20, "pts": 4, "reb": 9, "ast": 5, "stl": 1, "blk": 0, "tov": 0, "fgm": 1, "fga": 4, "tpm": 0, "tpa": 0, "ftm": 2, "fta": 2, "plusMinus": 15 },
+          "goals": [
+            { "id": "goal-27-stocks", "category": "defense", "kind": "stocks", "target": 2, "description": "Some 2+ roubos+tocos" },
+            { "id": "goal-27-tpPct", "category": "three", "kind": "tpPct", "target": 0.4, "description": "Acerte 40%+ de 3 (mín. 4 tentativas)" },
+            { "id": "goal-27-ast", "category": "playmaking", "kind": "ast", "target": 5, "description": "Dê 5+ assistências" }
+          ],
+          "goalsMet": ["goal-27-ast"]
+        }
+      ]
+    }
+  ],
+  "pendingInstructions": [],
+  "config": {
+    "baseCost": 100,
+    "costGrowth": 1.12,
+    "ageMults": { "u21": 1.3, "prime": 1, "decline": 0.5, "late": 0.3 },
+    "playoffsMult": 1.5,
+    "awayMult": 1.15,
+    "winMult": 1.1,
+    "goalBonusCap": 0.3
+  },
+  "targetOverrides": {}
+}
