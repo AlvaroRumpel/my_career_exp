@@ -64,4 +64,15 @@ describe('calibration targets', () => {
     const after = estimateOverall(Object.fromEntries(Object.entries(c.attributes).map(([k, v]) => [k, v.value])), 'SG')
     expect(after - before).toBeLessThanOrEqual(1)
   })
+  it('rookie season + offseason (three/mid focus) adds +1 to +2 OVR on top of the season', () => {
+    const c = makeCareer(20, 68)
+    runSeason(c, 0, 82)
+    const afterSeason = estimateOverall(Object.fromEntries(Object.entries(c.attributes).map(([k, v]) => [k, v.value])), 'SG')
+    c.seasons[0].offseason = { primary: 'three', secondary: 'mid' }
+    c.seasons.push({ year: 2027, games: [] })
+    recalcCareer(c)
+    const afterOff = estimateOverall(Object.fromEntries(Object.entries(c.attributes).map(([k, v]) => [k, v.value])), 'SG')
+    expect(afterOff - afterSeason).toBeGreaterThanOrEqual(1)
+    expect(afterOff - afterSeason).toBeLessThanOrEqual(2)
+  })
 })

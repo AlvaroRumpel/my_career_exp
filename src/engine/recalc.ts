@@ -1,9 +1,10 @@
-import type { Career, Game, Instruction } from './types'
+import type { Career, Category, Game, Instruction } from './types'
 import { ATTRIBUTES, PHYSICAL_REGRESSION_ORDER, estimateOverall } from './attributes'
 import { BADGES, applyBadgeProgress, progressForTier } from './badges'
 import { applyGameXp } from './progression'
 import { updateChallenge, createChallenge } from './challenges'
 import { goalMet, goalBonus } from './goals'
+import { applyOffseason } from './offseason'
 
 export function ageAt(career: Career, seasonIndex: number): number {
   return career.player.startAge + seasonIndex
@@ -16,7 +17,10 @@ export function playedGameCount(career: Career): number {
   return career.seasons.reduce((sum, s) => sum + s.games.filter(g => g.box && g.box.min > 0).length, 0)
 }
 
-export function processGame(career: Career, seasonIndex: number, game: Game, globalGameIndex: number): Instruction[] {
+export function processGame(
+  career: Career, seasonIndex: number, game: Game, globalGameIndex: number,
+  seasonXp?: Partial<Record<Category, number>>,
+): Instruction[] {
   if (!game.box || game.box.min <= 0) return []
   const age = ageAt(career, seasonIndex)
   const styleId = career.seasons[seasonIndex].playStyle ?? 'balanced'
@@ -25,6 +29,7 @@ export function processGame(career: Career, seasonIndex: number, game: Game, glo
   const bonus = goalBonus(game.goals, game.goalsMet)
   // XP de atributos
   const xpResult = applyGameXp(career, game.box, game.context, age, bonus, game.id, styleId)
+  if (seasonXp) for (const [cat, v] of Object.entries(xpResult.xpByCategory)) seasonXp[cat as Category] = (seasonXp[cat as Category] ?? 0) + v
   // badges passivas
   const badgeInstr = applyBadgeProgress(career.badges, game.box, game.context, career.player.position, career.player.heightCm, game.id, styleId)
   // desafios ativos (completados são renovados pra mesma badge); desafios criados após este
@@ -73,15 +78,19 @@ export function recalcCareer(career: Career): void {
   career.pendingInstructions = []
   for (const ch of career.activeChallenges) { ch.currentStreak = 0 }
   let globalGameIndex = 0
+  let prevSeasonXp: Partial<Record<Category, number>> = {}
   career.seasons.forEach((season, si) => {
     if (si > 0) {
-      const regress = regressionInstructions(career, si)
-      career.pendingInstructions.push(...regress)
+      // off-season da temporada anterior (se o usuário fechou com foco), depois regressão física
+      career.pendingInstructions.push(...applyOffseason(career, si - 1, prevSeasonXp))
+      career.pendingInstructions.push(...regressionInstructions(career, si))
     }
+    const seasonXp: Partial<Record<Category, number>> = {}
     for (const g of season.games) {
-      processGame(career, si, g, globalGameIndex)
+      processGame(career, si, g, globalGameIndex, seasonXp)
       if (g.box && g.box.min > 0) globalGameIndex++
     }
+    prevSeasonXp = seasonXp
   })
   // FIX B: already-applied instructions stay hidden across a replay (delete/import/etc.)
   const applied = new Set(career.appliedInstructionIds ?? [])

@@ -140,6 +140,50 @@ describe('replay equivalence (FIX A-D)', () => {
   })
 })
 
+function makeCareer34(): Career {
+  const initialAttributes: Record<string, number> = {}
+  for (const a of ATTRIBUTES) initialAttributes[a.id] = 68
+  const initialBadges: Record<string, number> = {}
+  for (const b of BADGES) initialBadges[b.id] = 0
+  const career: Career = {
+    player: { name: 'Rook', position: 'PG', heightCm: 190, team: 'ORL', startAge: 34 },
+    initialAttributes, initialBadges,
+    attributes: {}, badges: {}, activeChallenges: [],
+    seasons: [
+      { year: 2026, games: [game(1), game(2), game(3)], playStyle: 'balanced', offseason: { primary: 'three', secondary: 'mid' } },
+      { year: 2027, games: [] },
+    ],
+    pendingInstructions: [], config: DEFAULT_CONFIG, targetOverrides: {},
+  }
+  return career
+}
+
+describe('offseason in replay', () => {
+  it('season with offseason choice yields offseason instructions before regression on the next season', () => {
+    const c = makeCareer34()
+    recalcCareer(c)
+    const ids = c.pendingInstructions.map(i => i.id)
+    const firstOff = ids.findIndex(i => i.startsWith('offseason-'))
+    const firstReg = ids.findIndex(i => i.startsWith('regress-1-'))
+    expect(firstOff).toBeGreaterThanOrEqual(0)
+    expect(firstReg).toBeGreaterThan(firstOff)
+  })
+  it('season without offseason choice yields no offseason instructions', () => {
+    const c = makeCareer34()
+    delete c.seasons[0].offseason
+    recalcCareer(c)
+    expect(c.pendingInstructions.some(i => i.id.startsWith('offseason-'))).toBe(false)
+  })
+  it('replay is idempotent with offseason', () => {
+    const c = makeCareer34()
+    recalcCareer(c)
+    const a = JSON.stringify([c.attributes, c.badges, c.pendingInstructions.map(i => i.id)])
+    recalcCareer(c)
+    const b = JSON.stringify([c.attributes, c.badges, c.pendingInstructions.map(i => i.id)])
+    expect(a).toBe(b)
+  })
+})
+
 describe('replay of a real PG save under affinity rules', () => {
   it('recalculates without throwing, all attributes >= initial, post badges > 0', () => {
     const career = structuredClone(fixture) as unknown as Career
