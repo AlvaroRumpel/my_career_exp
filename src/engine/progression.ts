@@ -1,21 +1,12 @@
 import type { BoxScore, Career, Category, EngineConfig, GameContext, Instruction } from './types'
-import { attributesByCategory, ATTRIBUTES } from './attributes'
+import { attributesByCategory } from './attributes'
 import { categoryXp } from './categoryXp'
 import { qualityMultiplier, ageMultiplier, contextMultiplier } from './multipliers'
 import { styleCategoryMult } from './playStyles'
+import { attrWeight } from './affinity'
 
 export function upgradeCost(value: number, cfg: EngineConfig): number {
   return Math.round(cfg.baseCost * Math.pow(cfg.costGrowth, value - 70))
-}
-
-export function pickTarget(career: Career, cat: Category): string {
-  const override = career.targetOverrides[cat]
-  const defs = attributesByCategory(cat)
-  if (override && defs.some(d => d.id === override) && career.attributes[override].value < 99) return override
-  const sorted = defs
-    .filter(d => career.attributes[d.id].value < 99)
-    .sort((a, b) => career.attributes[a.id].value - career.attributes[b.id].value)
-  return sorted[0]?.id ?? defs[0].id
 }
 
 export interface GameXpResult {
@@ -29,8 +20,9 @@ export function applyGameXp(
   styleId: string = 'balanced',
 ): GameXpResult {
   const cfg = career.config
+  const { position, heightCm } = career.player
   const mult = qualityMultiplier(box) * ageMultiplier(age, cfg) * contextMultiplier(ctx, cfg)
-  const raw = categoryXp(box, career.player.position)
+  const raw = categoryXp(box, position)
   const xpByCategory = {} as Record<Category, number>
   const instructions: Instruction[] = []
   let n = 0 // local counter, resets per call -> deterministic ids across replays
@@ -42,32 +34,27 @@ export function applyGameXp(
     xpByCategory[cat] = total
     if (total <= 0) continue
 
-    let remaining = total
-    // aplica no alvo atual; se cruzar limiar, sobe e re-alveja
-    while (remaining > 0) {
-      const targetId = pickTarget(career, cat)
-      const attr = career.attributes[targetId]
-      if (attr.value >= 99) break
-      attr.xp += remaining
-      remaining = 0
-      const cost = upgradeCost(attr.value, cfg)
-      if (attr.xp >= cost) {
-        attr.xp -= cost
+    // divisão ponderada por afinidade entre os atributos <99 da categoria (peso só altera a fatia)
+    const defs = attributesByCategory(cat).filter(d => career.attributes[d.id].value < 99)
+    if (defs.length === 0) continue
+    const weights = defs.map(d => attrWeight(d.id, styleId, position, heightCm))
+    const wsum = weights.reduce((s, w) => s + w, 0)
+
+    defs.forEach((d, i) => {
+      const attr = career.attributes[d.id]
+      attr.xp += total * weights[i] / wsum
+      // loop resolve múltiplos +1 num jogo grande
+      while (attr.value < 99 && attr.xp >= upgradeCost(attr.value, cfg)) {
+        attr.xp -= upgradeCost(attr.value, cfg)
         attr.value += 1
-        const label = ATTRIBUTES.find(a => a.id === targetId)?.label ?? targetId
         instructions.push({
           id: `instr-${gameId}-${n++}`, type: 'attribute',
-          text: `+1 ${label} (${attr.value - 1} → ${attr.value})`,
-          attribute: targetId, delta: 1,
+          text: `+1 ${d.label} (${attr.value - 1} → ${attr.value})`,
+          attribute: d.id, delta: 1,
         })
-        // excesso continua no mesmo atributo (novo custo maior); loop resolve múltiplos +1
-        remaining = 0
-        if (attr.xp >= upgradeCost(attr.value, cfg)) {
-          remaining = attr.xp
-          attr.xp = 0
-        }
       }
-    }
+      if (attr.value >= 99) attr.xp = 0
+    })
   }
   return { xpByCategory, instructions }
 }

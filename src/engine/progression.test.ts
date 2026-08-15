@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { upgradeCost, pickTarget, applyGameXp } from './progression'
+import { upgradeCost, applyGameXp } from './progression'
 import { DEFAULT_CONFIG } from './types'
 import type { Career, BoxScore, GameContext } from './types'
 import { ATTRIBUTES } from './attributes'
@@ -30,24 +30,11 @@ describe('upgradeCost', () => {
   })
 })
 
-describe('pickTarget', () => {
-  it('picks lowest-value attribute in category', () => {
-    const career = makeCareer()
-    career.attributes['threePoint'].value = 65
-    expect(pickTarget(career, 'three')).toBe('threePoint')
-  })
-  it('respects user override', () => {
-    const career = makeCareer()
-    career.targetOverrides['playmaking'] = 'passIQ'
-    expect(pickTarget(career, 'playmaking')).toBe('passIQ')
-  })
-})
-
 describe('applyGameXp', () => {
   it('accumulates XP and emits +1 instruction when threshold crossed', () => {
     const career = makeCareer()
     // força quase-limiar em three
-    const target = pickTarget(career, 'three')
+    const target = 'threePoint'
     career.attributes[target].xp = upgradeCost(70, DEFAULT_CONFIG) - 1
     const result = applyGameXp(career, goodGame, ctxLoss, 22, {}, 'test')
     const plusOne = result.instructions.find(i => i.attribute === target && i.delta === 1)
@@ -68,7 +55,7 @@ describe('applyGameXp', () => {
   })
   it('cascades multiple upgrades when XP exceeds multiple thresholds in one game', () => {
     const career = makeCareer()
-    const target = pickTarget(career, 'three')
+    const target = 'threePoint'
     // Pre-populate with 3× base cost so loop will cascade through multiple upgrades
     career.attributes[target].xp = upgradeCost(70, DEFAULT_CONFIG) * 3
     const result = applyGameXp(career, goodGame, ctx, 22, {}, 'test')
@@ -77,5 +64,32 @@ describe('applyGameXp', () => {
     expect(threeInstructions.length).toBeGreaterThan(1)
     // Value should increase by more than 1
     expect(career.attributes[target].value).toBeGreaterThan(71)
+  })
+})
+
+describe('weighted distribution within a category', () => {
+  it('splits category XP across all attributes proportionally to affinity weight', () => {
+    const career = makeCareer() // SG 196, balanced
+    const r = applyGameXp(career, goodGame, ctxLoss, 22, {}, 'test', 'balanced')
+    const ids = ['passAccuracy', 'ballHandle', 'speedWithBall', 'passIQ', 'passVision']
+    const gained = ids.map(id => career.attributes[id].xp + (career.attributes[id].value - 70) * upgradeCost(70, DEFAULT_CONFIG))
+    const sum = gained.reduce((s, v) => s + v, 0)
+    expect(sum).toBeCloseTo(r.xpByCategory.playmaking, 3)
+    // SG balanced 196: playmaking is normal for SG, height mid → all weights 1 → equal shares
+    for (const g of gained) expect(g).toBeCloseTo(sum / 5, 3)
+  })
+  it('buffed attribute gets a bigger share than contra attribute', () => {
+    const career = makeCareer()
+    career.player = { ...career.player, position: 'PG', heightCm: 184 }
+    applyGameXp(career, goodGame, ctxLoss, 22, {}, 'test', 'slasher')
+    // inside: slasher buffs inside (layup) but overrides post attrs to contra; PG short → post also contra
+    expect(career.attributes['layup'].xp).toBeGreaterThan(career.attributes['postHook'].xp * 2)
+  })
+  it('attributes at 99 receive nothing', () => {
+    const career = makeCareer()
+    career.attributes['passIQ'].value = 99
+    applyGameXp(career, goodGame, ctxLoss, 22, {}, 'test')
+    expect(career.attributes['passIQ'].xp).toBe(0)
+    expect(career.attributes['passIQ'].value).toBe(99)
   })
 })
