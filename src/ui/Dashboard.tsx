@@ -8,6 +8,7 @@ import { createChallenge } from '../engine/challenges'
 import { exportCareer, importCareer } from '../storage'
 import { recalcCareer, regressionInstructions, playedGameCount } from '../engine/recalc'
 import { PLAY_STYLES, getStyle, styleCategoryMult } from '../engine/playStyles'
+import { attrWeight, badgeWeight } from '../engine/affinity'
 import { CATEGORIES, CATEGORY_LABELS, CATEGORY_ABBR, categoryAverages, seasonOvrDelta } from './derive'
 
 const TIER_STYLE: Record<number, { border: string; label: string; seg: string; grad: boolean }> = {
@@ -21,12 +22,19 @@ const TIER_STYLE: Record<number, { border: string; label: string; seg: string; g
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
-function AttrRow({ label, value, xp, cost }: { label: string; value: number; xp: number; cost: number }) {
+function WeightChip({ w }: { w: number }) {
+  if (Math.abs(w - 1) < 0.001) return null
+  const cls = w >= 1.5 ? 'text-orange-400' : w > 1 ? 'text-orange-700' : w <= 0.5 ? 'text-red-800' : 'text-stone-500'
+  return <span className={`font-display text-[10px] tracking-[.06em] ${cls}`}>×{w.toFixed(w >= 1 ? 1 : 2)}</span>
+}
+
+function AttrRow({ label, value, xp, cost, weight }: { label: string; value: number; xp: number; cost: number; weight: number }) {
   const pct = Math.min(100, Math.round((xp / cost) * 100))
   return (
     <div className="flex items-center gap-2 text-sm">
       <span className="w-40 truncate">{label}</span>
       <span className="stat w-8 text-right">{value}</span>
+      <span className="w-9"><WeightChip w={weight} /></span>
       <div className="h-1.5 flex-1 bg-[#171412]">
         <div className="h-1.5 bg-gradient-to-r from-orange-700 to-orange-400" style={{ width: `${pct}%` }} />
       </div>
@@ -196,7 +204,7 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center justify-between border-t border-hud-line pt-2.5">
           <span className="font-display text-[10px] tracking-[.1em] text-orange-700 uppercase">
-            Laranja = foco do estilo {style.name}
+            Laranja = foco do estilo {style.name} · ×w = afinidade (estilo·posição·altura)
           </span>
           <button className="text-sm font-medium text-stone-400" onClick={() => setShowAttrs(v => !v)}>
             {showAttrs ? 'Fechar lista' : 'Abrir lista'}
@@ -211,7 +219,8 @@ export default function Dashboard() {
                   const state = career.attributes[a.id]
                   return (
                     <AttrRow key={a.id} label={a.label} value={state.value} xp={state.xp}
-                      cost={upgradeCost(state.value, career.config)} />
+                      cost={upgradeCost(state.value, career.config)}
+                      weight={attrWeight(a.id, season.playStyle, player.position, player.heightCm)} />
                   )
                 })}
               </div>
@@ -240,9 +249,12 @@ export default function Dashboard() {
               style={ts.grad ? { background: 'linear-gradient(150deg, rgba(120,113,108,.08), #0d0c0b 70%)' } : { background: '#0d0c0b' }}>
               <div className="flex items-center justify-between gap-1">
                 <span className={`truncate text-[13px] font-semibold ${tier === 0 ? 'text-stone-400' : ''}`}>{b.name}</span>
-                <span className={`font-display text-[10px] tracking-[.12em] uppercase ${ts.label}`}>
-                  {tier === 0 ? 'Sem tier' : TIER_NAMES[tier]}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <WeightChip w={badgeWeight(b.id, b.group, season.playStyle, player.position, player.heightCm)} />
+                  <span className={`font-display text-[10px] tracking-[.12em] uppercase ${ts.label}`}>
+                    {tier === 0 ? 'Sem tier' : TIER_NAMES[tier]}
+                  </span>
+                </div>
               </div>
               <div className="flex gap-1">
                 {Array.from({ length: 5 }, (_, i) => (
