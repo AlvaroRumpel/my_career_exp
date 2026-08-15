@@ -93,3 +93,23 @@ export function attrWeight(attrId: string, styleId: string | undefined, pos: Pos
   const h = hAxis.attrOverrides?.[attrId] ?? axisTagForCategory(hAxis, cat)
   return clamp(1 + DELTA[s] * STYLE_DELTA + DELTA[p] * POSITION_DELTA + DELTA[h] * HEIGHT_DELTA)
 }
+
+// group da badge → categoria de atributo equivalente (general não tem)
+export type BadgeGroup = 'inside' | 'outside' | 'playmaking' | 'defense' | 'rebounding' | 'general'
+const GROUP_CATEGORY: Record<BadgeGroup, Category | null> = {
+  inside: 'inside', outside: 'three', playmaking: 'playmaking',
+  defense: 'defense', rebounding: 'rebounding', general: null,
+}
+
+export function badgeWeight(badgeId: string, group: BadgeGroup, styleId: string | undefined, pos: Position, cm: number): number {
+  const cat = GROUP_CATEGORY[group]
+  const style = getStyle(styleId)
+  const s: Tag = style.focusBadges.includes(badgeId) ? 'buff'
+    : style.contraBadges.includes(badgeId) ? 'contra'
+    : styleTagForCategory(styleId, cat)
+  const posAxis = POSITION_AFFINITY[pos]
+  const p = posAxis.badgeOverrides?.[badgeId] ?? axisTagForCategory(posAxis, cat)
+  const hAxis = HEIGHT_AFFINITY[heightBand(pos, cm)]
+  const h = hAxis.badgeOverrides?.[badgeId] ?? axisTagForCategory(hAxis, cat)
+  return clamp(1 + DELTA[s] * STYLE_DELTA + DELTA[p] * POSITION_DELTA + DELTA[h] * HEIGHT_DELTA)
+}

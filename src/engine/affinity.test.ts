@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { heightBand, attrWeight } from './affinity'
+import { heightBand, attrWeight, badgeWeight } from './affinity'
 import { ATTRIBUTES } from './attributes'
+import { BADGES } from './badges'
 
 describe('heightBand', () => {
   it('is relative to position', () => {
@@ -45,6 +46,38 @@ describe('attrWeight', () => {
         for (const pos of ['PG', 'SG', 'SF', 'PF', 'C'] as const) {
           for (const cm of [170, 200, 225]) {
             const w = attrWeight(a.id, style, pos, cm)
+            expect(w).toBeGreaterThanOrEqual(0.25)
+            expect(w).toBeLessThanOrEqual(2.5)
+          }
+        }
+      }
+    }
+  })
+})
+
+describe('badgeWeight', () => {
+  it('focus badge is buffed, contra badge is nerfed, others follow group category', () => {
+    // sniper, SF 200 (neutral position for three? SF has no three tag; height mid)
+    expect(badgeWeight('deadeye', 'outside', 'sniper', 'SF', 200)).toBeCloseTo(1.5, 5)        // focus
+    expect(badgeWeight('posterizer', 'inside', 'sniper', 'SF', 200)).toBeCloseTo(0.5, 5)     // contra
+    expect(badgeWeight('mini-marksman', 'outside', 'sniper', 'SF', 200)).toBeCloseTo(1.5, 5)  // focus
+    expect(badgeWeight('glove', 'defense', 'sniper', 'SF', 200)).toBeCloseTo(1.0, 5)          // defense: sniper has no defense mult
+    expect(badgeWeight('layup-mixmaster', 'inside', 'sniper', 'SF', 200)).toBeCloseTo(0.5, 5) // inside group, sniper inside 0.9 → contra
+  })
+  it('position and height shape badges via group + overrides', () => {
+    // PG 184: post-lockdown → position contra (override) + height contra (short) + balanced 0
+    expect(badgeWeight('post-lockdown', 'defense', 'balanced', 'PG', 184)).toBeCloseTo(1 - 0.35 - 0.25, 5)
+    // C 217: paint-patroller → position buff (override) + height buff (tall)
+    expect(badgeWeight('paint-patroller', 'defense', 'balanced', 'C', 217)).toBeCloseTo(1 + 0.35 + 0.25, 5)
+    // general group with no overrides stays 1
+    expect(badgeWeight('pogo-stick', 'general', 'balanced', 'SF', 200)).toBe(1.0)
+  })
+  it('never leaves the clamp range', () => {
+    for (const b of BADGES) {
+      for (const style of ['balanced', 'sniper', 'slasher', 'maestro', 'defensor', 'ancora', 'poste', 'criador', 'transicao']) {
+        for (const pos of ['PG', 'SG', 'SF', 'PF', 'C'] as const) {
+          for (const cm of [170, 200, 225]) {
+            const w = badgeWeight(b.id, b.group, style, pos, cm)
             expect(w).toBeGreaterThanOrEqual(0.25)
             expect(w).toBeLessThanOrEqual(2.5)
           }
