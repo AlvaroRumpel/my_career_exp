@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { upgradeCost, applyGameXp } from './progression'
+import { upgradeCost, applyGameXp, distributeCategoryXp } from './progression'
 import { DEFAULT_CONFIG } from './types'
 import type { Career, BoxScore, GameContext } from './types'
 import { ATTRIBUTES } from './attributes'
@@ -91,5 +91,22 @@ describe('weighted distribution within a category', () => {
     applyGameXp(career, goodGame, ctxLoss, 22, {}, 'test')
     expect(career.attributes['passIQ'].xp).toBe(0)
     expect(career.attributes['passIQ'].value).toBe(99)
+  })
+})
+
+describe('distributeCategoryXp', () => {
+  it('delivers exactly xp across the category and emits +1s with the given prefix', () => {
+    const career = makeCareer()
+    const counter = { n: 0 }
+    const before = ['midRange', 'shotIQ', 'offConsistency'].map(id => career.attributes[id].xp)
+    // 400 (not the brief's 250) so each equal-weight attr clears the 100-cost level-up threshold
+    const instr = distributeCategoryXp(career, 'mid', 400, 'balanced', 'offseason-2026', counter, 'Off-season 2026: ')
+    const gained = ['midRange', 'shotIQ', 'offConsistency']
+      .map((id, i) => career.attributes[id].xp - before[i] + (career.attributes[id].value - 70) * upgradeCost(70, DEFAULT_CONFIG))
+    expect(gained.reduce((s, v) => s + v, 0)).toBeCloseTo(400, 3)
+    expect(instr.length).toBeGreaterThan(0)
+    expect(instr[0].id).toBe('offseason-2026-0')
+    expect(instr[0].text.startsWith('Off-season 2026: +1 ')).toBe(true)
+    expect(counter.n).toBe(instr.length)
   })
 })

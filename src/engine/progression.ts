@@ -14,18 +14,49 @@ export interface GameXpResult {
   instructions: Instruction[]
 }
 
+// divisão ponderada por afinidade entre os atributos <99 da categoria (peso só altera a fatia)
+export function distributeCategoryXp(
+  career: Career, cat: Category, xp: number, styleId: string,
+  idPrefix: string, counter: { n: number }, textPrefix = '',
+): Instruction[] {
+  const cfg = career.config
+  const { position, heightCm } = career.player
+  const instructions: Instruction[] = []
+  if (xp <= 0) return instructions
+  const defs = attributesByCategory(cat).filter(d => career.attributes[d.id].value < 99)
+  if (defs.length === 0) return instructions
+  const weights = defs.map(d => attrWeight(d.id, styleId, position, heightCm))
+  const wsum = weights.reduce((s, w) => s + w, 0)
+  defs.forEach((d, i) => {
+    const attr = career.attributes[d.id]
+    attr.xp += xp * weights[i] / wsum
+    // loop resolve múltiplos +1 num jogo grande
+    while (attr.value < 99 && attr.xp >= upgradeCost(attr.value, cfg)) {
+      attr.xp -= upgradeCost(attr.value, cfg)
+      attr.value += 1
+      instructions.push({
+        id: `${idPrefix}-${counter.n++}`, type: 'attribute',
+        text: `${textPrefix}+1 ${d.label} (${attr.value - 1} → ${attr.value})`,
+        attribute: d.id, delta: 1,
+      })
+    }
+    if (attr.value >= 99) attr.xp = 0
+  })
+  return instructions
+}
+
 export function applyGameXp(
   career: Career, box: BoxScore, ctx: GameContext, age: number,
   goalBonus: Partial<Record<Category, number>>, gameId: string,
   styleId: string = 'balanced',
 ): GameXpResult {
   const cfg = career.config
-  const { position, heightCm } = career.player
+  const { position } = career.player
   const mult = qualityMultiplier(box) * ageMultiplier(age, cfg) * contextMultiplier(ctx, cfg)
   const raw = categoryXp(box, position)
   const xpByCategory = {} as Record<Category, number>
   const instructions: Instruction[] = []
-  let n = 0 // local counter, resets per call -> deterministic ids across replays
+  const counter = { n: 0 } // shared counter, resets per call -> deterministic ids across replays
 
   for (const cat of Object.keys(raw) as Category[]) {
     const gameXp = raw[cat] * mult * styleCategoryMult(styleId, cat)
@@ -33,28 +64,7 @@ export function applyGameXp(
     const total = gameXp + bonus
     xpByCategory[cat] = total
     if (total <= 0) continue
-
-    // divisão ponderada por afinidade entre os atributos <99 da categoria (peso só altera a fatia)
-    const defs = attributesByCategory(cat).filter(d => career.attributes[d.id].value < 99)
-    if (defs.length === 0) continue
-    const weights = defs.map(d => attrWeight(d.id, styleId, position, heightCm))
-    const wsum = weights.reduce((s, w) => s + w, 0)
-
-    defs.forEach((d, i) => {
-      const attr = career.attributes[d.id]
-      attr.xp += total * weights[i] / wsum
-      // loop resolve múltiplos +1 num jogo grande
-      while (attr.value < 99 && attr.xp >= upgradeCost(attr.value, cfg)) {
-        attr.xp -= upgradeCost(attr.value, cfg)
-        attr.value += 1
-        instructions.push({
-          id: `instr-${gameId}-${n++}`, type: 'attribute',
-          text: `+1 ${d.label} (${attr.value - 1} → ${attr.value})`,
-          attribute: d.id, delta: 1,
-        })
-      }
-      if (attr.value >= 99) attr.xp = 0
-    })
+    instructions.push(...distributeCategoryXp(career, cat, total, styleId, `instr-${gameId}`, counter))
   }
   return { xpByCategory, instructions }
 }
