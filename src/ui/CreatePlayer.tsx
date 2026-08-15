@@ -136,7 +136,7 @@ export default function CreatePlayer() {
 
   function submit() {
     const c: Career = {
-      player: { name, position, heightCm, team, startAge },
+      player: { name, position, heightCm: Math.min(240, Math.max(150, heightCm || 198)), team, startAge },
       initialAttributes: { ...attrs }, initialBadges: { ...badgeTiers },
       attributes: {}, badges: {}, activeChallenges: [],
       seasons: [{ year, games: [], playStyle }], playStyle,

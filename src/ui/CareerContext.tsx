@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import type { Career } from '../engine/types'
 import { loadCareer, saveCareer, clearCareer } from '../storage'
+import { recalcCareer } from '../engine/recalc'
 
 interface Ctx {
   career: Career | null
@@ -12,7 +13,7 @@ interface Ctx {
 const CareerCtx = createContext<Ctx | null>(null)
 
 export function CareerProvider({ children }: { children: ReactNode }) {
-  const [career, setCareer] = useState<Career | null>(() => loadCareer())
+  const [career, setCareer] = useState<Career | null>(() => { const c = loadCareer(); if (c) recalcCareer(c); return c })
   const persist = (c: Career | null) => { setCareer(c); if (c) saveCareer(c) }
   return (
     <CareerCtx.Provider value={{

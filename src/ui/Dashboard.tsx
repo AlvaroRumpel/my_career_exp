@@ -25,7 +25,7 @@ const pad2 = (n: number) => String(n).padStart(2, '0')
 function WeightChip({ w }: { w: number }) {
   if (Math.abs(w - 1) < 0.001) return null
   const cls = w >= 1.5 ? 'text-orange-400' : w > 1 ? 'text-orange-700' : w <= 0.5 ? 'text-red-800' : 'text-stone-500'
-  return <span className={`font-display text-[10px] tracking-[.06em] ${cls}`}>×{w.toFixed(w >= 1 ? 1 : 2)}</span>
+  return <span className={`font-display text-[10px] tracking-[.06em] ${cls}`}>×{w.toFixed(2)}</span>
 }
 
 function AttrRow({ label, value, xp, cost, weight }: { label: string; value: number; xp: number; cost: number; weight: number }) {
@@ -212,19 +212,25 @@ export default function Dashboard() {
         </div>
         {showAttrs && (
           <div className="flex flex-col gap-3 border-t border-hud-line pt-3">
-            {CATEGORIES.map(cat => (
-              <div key={cat} className="flex flex-col gap-1">
-                <span className="hud-label">{CATEGORY_LABELS[cat]}</span>
-                {attributesByCategory(cat).map(a => {
-                  const state = career.attributes[a.id]
-                  return (
-                    <AttrRow key={a.id} label={a.label} value={state.value} xp={state.xp}
-                      cost={upgradeCost(state.value, career.config)}
-                      weight={attrWeight(a.id, season.playStyle, player.position, player.heightCm)} />
-                  )
-                })}
-              </div>
-            ))}
+            {CATEGORIES.map(cat => {
+              const defs = attributesByCategory(cat)
+              const ws = defs.map(d => attrWeight(d.id, season.playStyle, player.position, player.heightCm))
+              const wsum = ws.reduce((s, w) => s + w, 0)
+              return (
+                <div key={cat} className="flex flex-col gap-1">
+                  <span className="hud-label">{CATEGORY_LABELS[cat]}</span>
+                  {defs.map((a, i) => {
+                    const state = career.attributes[a.id]
+                    // fatia relativa aos irmãos da categoria, não o peso bruto (categoria de 1 atributo sempre daria 100%)
+                    return (
+                      <AttrRow key={a.id} label={a.label} value={state.value} xp={state.xp}
+                        cost={upgradeCost(state.value, career.config)}
+                        weight={ws[i] * defs.length / wsum} />
+                    )
+                  })}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

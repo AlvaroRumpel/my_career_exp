@@ -121,7 +121,7 @@ Passa `career.player.heightCm` para `applyBadgeProgress`. `applyGameXp` já rece
 
 ### UI (`Dashboard.tsx`)
 
-Ao lado do valor de cada atributo e do tier de cada badge: chip `×{w.toFixed(2)}` (ou `×2.1` com 1 casa quando ≥1). Classe por faixa: `w >= 1.5` forte, `> 1` leve, `== 1` oculto ou neutro, `< 1` fraco. Estilo da temporada atual.
+Ao lado do valor de cada atributo e do tier de cada badge: chip `×{w.toFixed(2)}`, sempre 2 casas. Classe por faixa: `w >= 1.5` forte, `> 1` leve, `== 1` oculto ou neutro, `< 1` fraco. Estilo da temporada atual.
 
 ### Compat de save
 
@@ -129,7 +129,7 @@ Replay determinístico (`recalcCareer`) já reconstrói tudo do snapshot inicial
 
 ## Testes
 
-- `affinity.test.ts`: `heightBand` limites; `attrWeight` para os 5 casos da conversa (PG 185 Sniper→threePoint = 2.1; PG 185 Sniper→postHook = 0.25; PG 196 Slasher→standingDunk = 1.15; C 213 Sniper→threePoint = 0.9; C 213 Poste→postHook = 2.1); clamp em ambos os extremos; `badgeWeight` focus/contra/group fallback.
+- `affinity.test.ts`: `heightBand` limites; `attrWeight` para os 5 casos da conversa (PG 184 Sniper→threePoint = 1.85; PG 184 Sniper→postHook = 0.25 [clamp]; PG 196 Slasher→standingDunk = 1.4; C 213 Sniper→threePoint = 1.15; C 213 Poste→postHook = 1.85); clamp em ambos os extremos; `badgeWeight` focus/contra/group fallback. Altura só tagueia as listas específicas `SHORT_BUFF_ATTRS`/`SHORT_CONTRA_ATTRS` (ou badges equivalentes), não a categoria inteira, e a faixa `mid` contribui 0.
 - `progression.test.ts`: soma das fatias = total da categoria; atributo 99 recebe 0; múltiplos +1 num jogo grande; ordem de instruções determinística.
 - `badges.test.ts`: PG progride badge de big com peso <1 mas >0; C progride Post Lockdown com peso >1; `styleBadgeMult` não existe mais.
 - `styleBalance.test.ts` / `styleIntegration.test.ts`: continuam verdes (total por categoria intocado). Se `styleIntegration` assume alvo único, ajustar asserção para soma na categoria.
