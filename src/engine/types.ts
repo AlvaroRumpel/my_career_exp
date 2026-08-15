@@ -16,7 +16,8 @@ export interface Game {
   id: string; context: GameContext; box: BoxScore | null
   goals: Goal[]; goalsMet: string[]; ovrAfter?: number
 }
-export interface Season { year: number; games: Game[]; playStyle?: string }
+export interface OffseasonChoice { primary: Category; secondary: Category }
+export interface Season { year: number; games: Game[]; playStyle?: string; offseason?: OffseasonChoice }
 export interface AttributeState { value: number; xp: number }
 export interface BadgeState { progress: number }
 export interface Challenge {
@@ -33,6 +34,7 @@ export interface EngineConfig {
   baseCost: number; costGrowth: number
   ageMults: { u21: number; prime: number; decline: number; late: number }
   playoffsMult: number; awayMult: number; winMult: number; goalBonusCap: number
+  offseasonBase: number; offseasonShare: number
 }
 export interface Player {
   name: string; position: Position; heightCm: number; team: string; startAge: number
@@ -58,4 +60,5 @@ export const DEFAULT_CONFIG: EngineConfig = {
   baseCost: 100, costGrowth: 1.12,
   ageMults: { u21: 1.3, prime: 1.0, decline: 0.5, late: 0.3 },
   playoffsMult: 1.5, awayMult: 1.15, winMult: 1.1, goalBonusCap: 0.3,
+  offseasonBase: 450, offseasonShare: 0.2,
 }

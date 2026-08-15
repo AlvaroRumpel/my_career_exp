@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { saveCareer, loadCareer, exportCareer, importCareer, clearCareer } from './storage'
+import { saveCareer, loadCareer, exportCareer, importCareer, clearCareer, STORAGE_KEY } from './storage'
 import { DEFAULT_CONFIG } from './engine/types'
 import type { Career } from './engine/types'
 
@@ -42,5 +42,26 @@ describe('export/import', () => {
   it('rejects garbage with a pt-BR message', () => {
     expect(() => importCareer('{"foo": 1}')).toThrow(/inválido/i)
     expect(() => importCareer('not json')).toThrow()
+  })
+})
+
+describe('config merge for old saves', () => {
+  it('loadCareer fills missing config fields from DEFAULT_CONFIG', () => {
+    const store = memoryStorage()
+    const legacy = { player: { name: 'X', position: 'PG', heightCm: 190, team: 'T', startAge: 20 },
+      initialAttributes: {}, initialBadges: {}, attributes: {}, badges: {}, activeChallenges: [],
+      seasons: [{ year: 2026, games: [] }], pendingInstructions: [], targetOverrides: {},
+      config: { baseCost: 100, costGrowth: 1.12, ageMults: DEFAULT_CONFIG.ageMults, playoffsMult: 1.5, awayMult: 1.15, winMult: 1.1, goalBonusCap: 0.3 } }
+    store.setItem(STORAGE_KEY, JSON.stringify(legacy))
+    const c = loadCareer(store)!
+    expect(c.config.offseasonBase).toBe(DEFAULT_CONFIG.offseasonBase)
+    expect(c.config.offseasonShare).toBe(DEFAULT_CONFIG.offseasonShare)
+    expect(c.config.baseCost).toBe(100)
+  })
+  it('importCareer does the same merge', () => {
+    const json = JSON.stringify({ player: { name: 'X' }, seasons: [], attributes: {}, config: { baseCost: 120 } })
+    const c = importCareer(json)
+    expect(c.config.baseCost).toBe(120)
+    expect(c.config.offseasonShare).toBe(DEFAULT_CONFIG.offseasonShare)
   })
 })
