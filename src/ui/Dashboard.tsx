@@ -6,10 +6,12 @@ import { BADGES, TIER_NAMES, TIER_THRESHOLDS, tierOf, progressForTier } from '..
 import { recentAverages } from '../engine/goals'
 import { createChallenge } from '../engine/challenges'
 import { exportCareer, importCareer } from '../storage'
-import { recalcCareer, regressionInstructions, playedGameCount } from '../engine/recalc'
+import { recalcCareer, playedGameCount } from '../engine/recalc'
+import { offseasonTotal } from '../engine/offseason'
 import { PLAY_STYLES, getStyle, styleCategoryMult } from '../engine/playStyles'
 import { attrWeight, badgeWeight } from '../engine/affinity'
-import { CATEGORIES, CATEGORY_LABELS, CATEGORY_ABBR, categoryAverages, seasonOvrDelta } from './derive'
+import { CATEGORIES, CATEGORY_LABELS, CATEGORY_ABBR, categoryAverages, seasonOvrDelta, gameXpBreakdown } from './derive'
+import type { Category } from '../engine/types'
 
 const TIER_STYLE: Record<number, { border: string; label: string; seg: string; grad: boolean }> = {
   0: { border: 'border-hud-line', label: 'text-stone-600', seg: '', grad: false },
@@ -48,12 +50,19 @@ export default function Dashboard() {
   const [nextStyle, setNextStyle] = useState<string | null>(null)
   const [showAttrs, setShowAttrs] = useState(false)
   const [showAllBadges, setShowAllBadges] = useState(false)
+  const [primary, setPrimary] = useState<Category>('three')
+  const [secondary, setSecondary] = useState<Category>('mid')
 
   if (!career) return null
 
   const { player, seasons } = career
   const age = player.startAge + seasons.length - 1
   const season = seasons[seasons.length - 1]
+  const playedGames = season.games.filter(g => g.box && g.box.min > 0)
+  const wins = playedGames.filter(g => g.context.win).length
+  const seasonXpTotal = playedGames.reduce((s, g) => s + gameXpBreakdown(career, g, seasons.length - 1).total, 0)
+  const offTotal = Math.round(offseasonTotal(career.config, age, seasonXpTotal))
+  const canClose = playedGames.length > 0 && primary !== secondary
   const attrValues = Object.fromEntries(ATTRIBUTES.map(a => [a.id, career.attributes[a.id]?.value ?? 0]))
   const ovr = estimateOverall(attrValues, player.position)
   const delta = seasonOvrDelta(career)
@@ -73,18 +82,20 @@ export default function Dashboard() {
     update(c => { c.activeChallenges.splice(idx, 1) })
   }
 
-  function newSeason() {
-    if (!window.confirm(`Iniciar nova temporada com estilo ${getStyle(nextStyle ?? career!.playStyle).name}?`)) return
+  function closeSeason() {
+    const style = nextStyle ?? career!.playStyle ?? 'balanced'
+    const withPackage = playedGames.length > 0
+    const msg = withPackage
+      ? `Fechar ${season.year}: foco ${CATEGORY_LABELS[primary]} + ${CATEGORY_LABELS[secondary]}, pacote ≈ ${offTotal} XP. Próxima temporada com ${getStyle(style).name}. Continuar?`
+      : `Iniciar nova temporada com estilo ${getStyle(style).name}? (sem jogos, sem pacote de off-season)`
+    if (!window.confirm(msg)) return
     update(c => {
       const last = c.seasons[c.seasons.length - 1]
-      c.seasons.push({ year: last.year + 1, games: [] })
-      c.pendingInstructions.push(...regressionInstructions(c, c.seasons.length - 1))
-      c.nextGoals = null
-      c.pendingContext = null
-      c.lastResult = null
-      const style = nextStyle ?? c.playStyle ?? 'balanced'
-      c.seasons[c.seasons.length - 1].playStyle = style
+      if (withPackage) last.offseason = { primary, secondary }
+      c.seasons.push({ year: last.year + 1, games: [], playStyle: style })
       c.playStyle = style
+      c.nextGoals = null; c.pendingContext = null; c.lastResult = null
+      recalcCareer(c)  // reaplica tudo: off-season + regressão viram pendingInstructions
     })
   }
 
@@ -168,6 +179,11 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+          {career.pendingInstructions.some(i => i.id.startsWith('offseason-')) && (
+            <div className="border-l-2 border-orange-500 bg-orange-950/30 px-3 py-2 text-xs text-orange-200">
+              Aplique no editor de roster do 2K e ajuste <b>Potential = OVR</b> para o 2K não progredir sozinho.
+            </div>
+          )}
           <button className="btn-cta" onClick={() => update(c => {
             c.appliedInstructionIds = [...(c.appliedInstructionIds ?? []), ...c.pendingInstructions.map(i => i.id)]
             c.pendingInstructions = []
@@ -331,22 +347,51 @@ export default function Dashboard() {
         <div className="hud-panel py-3 text-sm text-hud-mut2">Nenhum jogo registrado nesta temporada.</div>
       )}
 
-      {/* Gestão */}
+      {/* Off-season */}
       <div className="flex flex-col gap-2.5 border-t border-hud-line pt-4">
-        <span className="hud-label">Gestão da carreira</span>
+        <span className="hud-label">Off-season</span>
+        <div className="grid grid-cols-4 gap-px border border-hud-line bg-hud-line text-center">
+          {[['JOGOS', String(playedGames.length)], ['W–L', `${wins}–${playedGames.length - wins}`],
+            ['OVR Δ', (delta >= 0 ? '+' : '') + delta], ['XP', String(Math.round(seasonXpTotal))]].map(([l, v]) => (
+            <div key={l} className="flex flex-col items-center gap-1 bg-hud-panel px-1 py-2">
+              <span className="stat text-lg leading-none">{v}</span>
+              <span className="font-display text-[9px] tracking-[.1em] text-hud-mut">{l}</span>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <select className="input text-sm" value={primary} onChange={e => setPrimary(e.target.value as Category)} title="Foco primário (35%)">
+            {CATEGORIES.map(c => <option key={c} value={c}>1º {CATEGORY_LABELS[c]}</option>)}
+          </select>
+          <select className="input text-sm" value={secondary} onChange={e => setSecondary(e.target.value as Category)} title="Foco secundário (15%)">
+            {CATEGORIES.map(c => <option key={c} value={c}>2º {CATEGORY_LABELS[c]}</option>)}
+          </select>
+        </div>
+        {primary === secondary && <span className="text-xs text-red-400">Escolha dois focos diferentes.</span>}
         <select className="input text-sm" value={nextStyle ?? (career.playStyle ?? 'balanced')}
           onChange={e => setNextStyle(e.target.value)} title="Estilo da próxima temporada">
           {PLAY_STYLES.map(s => <option key={s.id} value={s.id}>{s.reference ? `${s.name} — ${s.reference}` : s.name}</option>)}
         </select>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex items-center justify-between">
+          <span className="font-display text-[10px] tracking-[.1em] text-hud-mut uppercase">
+            Pacote ≈ {offTotal} XP · 50% geral / 35% 1º / 15% 2º
+          </span>
+          <button className="border border-orange-500/40 px-3 py-2 text-sm font-semibold text-orange-300 disabled:opacity-40"
+            disabled={!canClose && playedGames.length > 0} onClick={closeSeason}>
+            {playedGames.length > 0 ? 'Fechar temporada' : 'Nova temporada'}
+          </button>
+        </div>
+      </div>
+
+      {/* Gestão */}
+      <div className="flex flex-col gap-2.5 border-t border-hud-line pt-4">
+        <span className="hud-label">Gestão da carreira</span>
+        <div className="grid grid-cols-3 gap-2">
           <button className="btn-ghost" onClick={handleExport}>Exportar JSON</button>
           <label className="btn-ghost cursor-pointer">
             Importar JSON
             <input type="file" accept="application/json" className="hidden" onChange={handleImport} />
           </label>
-          <button className="border border-orange-500/40 px-3 py-2 text-sm font-semibold text-orange-300" onClick={newSeason}>
-            Nova temporada
-          </button>
           <button className="border border-red-400/35 px-3 py-2 text-sm font-medium text-red-400" onClick={deleteCareer}>
             Apagar carreira
           </button>
